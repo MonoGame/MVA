@@ -1,6 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Runtime.InteropServices;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Input.Touch;
+
 namespace Wumpus
 {
     /// <summary>
@@ -9,46 +12,33 @@ namespace Wumpus
     public class Game1 : Game
     {
         private Map _map;
+        private SpriteFont _hudFont;
+
+        private Texture2D _wallNorthOpen;
+        private Texture2D _wallNorthSolid;
+        private Texture2D _wallEastOpen;
+        private Texture2D _wallEastSolid;
+        private Texture2D _wallSouthOpen;
+        private Texture2D _wallSouthSolid;
+        private Texture2D _wallWestOpen;
+        private Texture2D _wallWestSolid;
+
+        private Texture2D _solidWhite;
+
+        private TouchLocation _lastTouch;
+
+        private Rectangle _buttonNorth;
+        private Rectangle _buttonEast;
+        private Rectangle _buttonSouth;
+        private Rectangle _buttonWest;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        Vector3 eye;
-        Vector3 up;
-        Vector3 at;
 
-        float fov;
-        //camera properties
-        float zNear;
-        float zFar;
-
-        BasicEffect basicEffect;
-        DynamicVertexBuffer vertexBuffer;
-        DynamicIndexBuffer indexBuffer;
-        VertexPositionColor[] cube;
-        float cubeRotation = 0.0f;
-        static ushort[] cubeIndices =
-    		{
-    			0,2,1, // -x
-    			1,2,3,
-
-    			4,5,6, // +x
-    			5,7,6,
-
-    			0,1,5, // -y
-    			0,5,4,
-
-    			2,6,7, // +y
-    			2,7,3,
-
-    			0,4,6, // -z
-    			0,6,2,
-
-    			1,3,7, // +z
-    			1,7,5,
-    		};
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             Content.RootDirectory = "Content";
         }
 
@@ -60,34 +50,16 @@ namespace Wumpus
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-            zNear = 0.001f;
-            zFar = 1000.0f;
-            fov = MathHelper.Pi * 70.0f / 180.0f;
-            eye = new Vector3(0.0f, 0.7f, 1.5f);
-            at = new Vector3(0.0f, 0.0f, 0.0f);
-            up = new Vector3(0.0f, 1.0f, 0.0f);
-
-            cube = new VertexPositionColor[8];
-            cube[0] = new VertexPositionColor(new Vector3(-0.5f, -0.5f, -0.5f), new Color(0.0f, 0.0f, 0.0f));
-            cube[1] = new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0.5f), new Color(0.0f, 0.0f, 1.0f));
-            cube[2] = new VertexPositionColor(new Vector3(-0.5f, 0.5f, -0.5f), new Color(0.0f, 1.0f, 0.0f));
-            cube[3] = new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0.5f), new Color(0.0f, 1.0f, 1.0f));
-            cube[4] = new VertexPositionColor(new Vector3(0.5f, -0.5f, -0.5f), new Color(1.0f, 0.0f, 0.0f));
-            cube[5] = new VertexPositionColor(new Vector3(0.5f, -0.5f, 0.5f), new Color(1.0f, 0.0f, 1.0f));
-            cube[6] = new VertexPositionColor(new Vector3(0.5f, 0.5f, -0.5f), new Color(1.0f, 1.0f, 0.0f));
-            cube[7] = new VertexPositionColor(new Vector3(0.5f, 0.5f, 0.5f), new Color(1.0f, 1.0f, 1.0f));
-
-            vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionColor), 8, BufferUsage.WriteOnly);
-            indexBuffer = new DynamicIndexBuffer(graphics.GraphicsDevice, typeof(ushort), 36, BufferUsage.WriteOnly);
-
-            basicEffect = new BasicEffect(graphics.GraphicsDevice); //(device, null);
-            basicEffect.LightingEnabled = false;
-            basicEffect.VertexColorEnabled = true;
-            basicEffect.TextureEnabled = false;
-
-            graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             base.Initialize();
+
+            var bounds = GraphicsDevice.Viewport.Bounds;
+
+            var buttonWidth = bounds.Width / 4;
+            var buttonHeight = bounds.Height / 4;
+            _buttonNorth = new Rectangle(buttonWidth, 0, buttonWidth * 2, buttonHeight);
+            _buttonEast = new Rectangle(bounds.Right - buttonHeight, buttonHeight, buttonHeight, buttonHeight * 2);
+            _buttonSouth = new Rectangle(buttonWidth, bounds.Bottom - buttonHeight, buttonWidth * 2, buttonHeight);
+            _buttonWest = new Rectangle(0, buttonHeight, buttonHeight, buttonHeight * 2);
         }
 
         /// <summary>
@@ -98,7 +70,21 @@ namespace Wumpus
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-           
+
+            _hudFont = Content.Load<SpriteFont>("Segoe24");
+
+            _wallNorthOpen = Content.Load<Texture2D>("wall-north-open");
+            _wallNorthSolid = Content.Load<Texture2D>("wall-north-solid");
+            _wallEastOpen = Content.Load<Texture2D>("wall-east-open");
+            _wallEastSolid = Content.Load<Texture2D>("wall-east-solid");
+            _wallSouthOpen = Content.Load<Texture2D>("wall-south-open");
+            _wallSouthSolid = Content.Load<Texture2D>("wall-south-solid");
+            _wallWestOpen = Content.Load<Texture2D>("wall-west-open");
+            _wallWestSolid = Content.Load<Texture2D>("wall-west-solid");
+
+            _solidWhite = new Texture2D(GraphicsDevice, 2, 2, false, SurfaceFormat.Color);
+            _solidWhite.SetData(new [] { Color.White, Color.White, Color.White, Color.White });
+
             // Setup the map.
             _map = new Map();
         }
@@ -119,7 +105,24 @@ namespace Wumpus
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // TODO: Add your update logic here
+            var touchState = TouchPanel.GetState();
+            if (touchState.Count > 0)
+            {
+                var t1 = touchState[0];
+                if (t1.Id != _lastTouch.Id && t1.State == TouchLocationState.Pressed)
+                {
+                    if (_buttonNorth.Contains(t1.Position))
+                        _map.MovePlayerNorth();
+                    else if (_buttonEast.Contains(t1.Position))
+                        _map.MovePlayerEast();
+                    else if (_buttonSouth.Contains(t1.Position))
+                        _map.MovePlayerSouth();
+                    else if (_buttonWest.Contains(t1.Position))
+                        _map.MovePlayerWest();
+                }
+
+                _lastTouch = t1;
+            }
 
             base.Update(gameTime);
         }
@@ -130,32 +133,47 @@ namespace Wumpus
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            var device = GraphicsDevice;
+            device.Clear(Color.Black);
 
-            // Compute camera matrices.
-            Matrix View = Matrix.CreateLookAt(eye, at, up);
+            DrawRoom(gameTime);
 
-            Matrix Projection = Matrix.CreatePerspectiveFieldOfView(fov, GraphicsDevice.Viewport.AspectRatio, zNear, zFar);
-            cubeRotation += (0.001f) * (float)gameTime.ElapsedGameTime.TotalMilliseconds;
-            Matrix World = Matrix.CreateRotationY(cubeRotation);
-            // TODO: Add your drawing code here
-
-            vertexBuffer.SetData(cube, 0, 8, SetDataOptions.Discard);
-            indexBuffer.SetData(cubeIndices, 0, 36, SetDataOptions.Discard);
-
-            GraphicsDevice device = basicEffect.GraphicsDevice;
-            device.SetVertexBuffer(vertexBuffer);
-            device.Indices = indexBuffer;
-
-            basicEffect.View = View;
-            basicEffect.Projection = Projection;
-            basicEffect.World = World;
-            foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 8, 0, 36);
-            }
+            DrawHud(gameTime);
+            
             base.Draw(gameTime);
+        }
+
+        private void DrawRoom(GameTime gameTime)
+        {
+            var center = GraphicsDevice.Viewport.Bounds.Center.ToVector2();
+            spriteBatch.Begin();
+
+            var wallHalfLength = _wallNorthSolid.Width / 2.0f;
+            var wallDepth = _wallNorthSolid.Height;
+
+            var room = _map.PlayerRoom;
+
+            spriteBatch.Draw(room.NorthRoom != -1 ? _wallNorthOpen : _wallNorthSolid, new Vector2(center.X - wallHalfLength, center.Y - wallHalfLength));
+            spriteBatch.Draw(room.EastRoom != -1 ? _wallEastOpen : _wallEastSolid, new Vector2(center.X + wallHalfLength - wallDepth, center.Y - wallHalfLength));
+            spriteBatch.Draw(room.WestRoom != -1 ? _wallWestOpen : _wallWestSolid, new Vector2(center.X - wallHalfLength, center.Y - wallHalfLength));
+            spriteBatch.Draw(room.SouthRoom != -1 ? _wallSouthOpen : _wallSouthSolid, new Vector2(center.X - wallHalfLength, center.Y + wallHalfLength - wallDepth));
+
+            spriteBatch.End();
+        }
+
+        private void DrawHud(GameTime gameTime)
+        {
+            spriteBatch.Begin();
+
+            var room = string.Format("ROOM: {0}", _map.PlayerRoomIndex + 1);
+            spriteBatch.DrawString(_hudFont, room, new Vector2(20, 10), Color.White);
+
+            spriteBatch.Draw(_solidWhite, _buttonNorth, Color.Red);
+            spriteBatch.Draw(_solidWhite, _buttonEast, Color.Green);
+            spriteBatch.Draw(_solidWhite, _buttonSouth, Color.Blue);
+            spriteBatch.Draw(_solidWhite, _buttonWest, Color.White);
+
+            spriteBatch.End();
         }
     }
 }

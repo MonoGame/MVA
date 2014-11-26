@@ -20,7 +20,15 @@ namespace Wumpus
 
         public int WeaponRoom { get; private set; }
 
-        public int PlayerRoom { get; private set; }
+        public int PlayerRoomIndex { get; private set; }
+
+        public Room PlayerRoom
+        {
+            get
+            {
+                return _rooms[PlayerRoomIndex];
+            }        
+        }
 
         public Room this[int row, int column]            
         {
@@ -70,7 +78,35 @@ namespace Wumpus
 
             // Pick a random location for the player.
             var startRooms = _rooms.Where(e => !e.HasTrap && e.Index != WeaponRoom && e.Index != MonsterRoom).ToArray();
-            PlayerRoom = startRooms[random.Next(startRooms.Length)].Index;
+            PlayerRoomIndex = startRooms[random.Next(startRooms.Length)].Index;
+        }
+
+        public void MovePlayerNorth()
+        {
+            var room = PlayerRoom;
+            if (room.NorthRoom != -1)
+                PlayerRoomIndex = room.NorthRoom;
+        }
+
+        public void MovePlayerEast()
+        {
+            var room = PlayerRoom;
+            if (room.EastRoom != -1)
+                PlayerRoomIndex = room.EastRoom;
+        }
+
+        public void MovePlayerSouth()
+        {
+            var room = PlayerRoom;
+            if (room.SouthRoom != -1)
+                PlayerRoomIndex = room.SouthRoom;
+        }
+
+        public void MovePlayerWest()
+        {
+            var room = PlayerRoom;
+            if (room.WestRoom != -1)
+                PlayerRoomIndex = room.WestRoom;
         }
     }
 }
