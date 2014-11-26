@@ -1,5 +1,6 @@
 ﻿using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 
 // The Blank Application template is documented at http://go.microsoft.com/fwlink/?LinkId=234227
@@ -49,6 +50,7 @@ namespace Wumpus
 
             // Ensure the current window is active
             Window.Current.Activate();
+            StatusBar.GetForCurrentView().HideAsync();
         }
 
         /// <summary>
