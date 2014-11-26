@@ -8,6 +8,8 @@ namespace Wumpus
     /// </summary>
     public class Game1 : Game
     {
+        private Map _map;
+
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Vector3 eye;
@@ -96,7 +98,9 @@ namespace Wumpus
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            // TODO: use this.Content to load your game content here
+           
+            // Setup the map.
+            _map = new Map();
         }
 
         /// <summary>
