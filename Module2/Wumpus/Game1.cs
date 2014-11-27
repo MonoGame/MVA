@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
@@ -23,6 +24,10 @@ namespace Wumpus
         private Texture2D _wallWestOpen;
         private Texture2D _wallWestSolid;
 
+        private Texture2D _groundTex;
+
+        private Texture2D _playerTex;
+
         private Texture2D _solidWhite;
 
         private TouchLocation _lastTouch;
@@ -36,6 +41,8 @@ namespace Wumpus
         private Texture2D _buttonSouthTex;
         private Texture2D _buttonWestTex;
 
+        private readonly Rectangle _screenBounds;
+        private readonly Matrix _screenXform;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -45,6 +52,13 @@ namespace Wumpus
             graphics = new GraphicsDeviceManager(this);
             graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             Content.RootDirectory = "Content";
+
+            var screenScale = graphics.PreferredBackBufferHeight / 1080.0f;
+            _screenXform = Matrix.CreateScale(screenScale, screenScale, 1.0f);
+
+            _screenBounds = new Rectangle(0, 0,
+                (int)Math.Round(graphics.PreferredBackBufferWidth / screenScale),
+                (int)Math.Round(graphics.PreferredBackBufferHeight / screenScale));
         }
 
         /// <summary>
@@ -56,6 +70,12 @@ namespace Wumpus
         protected override void Initialize()
         {
             base.Initialize();
+
+            // By setting the display size on the touch
+            // panel to the virtual display size it will
+            // automatically scale the touch input.
+            TouchPanel.DisplayWidth = 1920;
+            TouchPanel.DisplayHeight = 1080;
         }
 
         /// <summary>
@@ -78,6 +98,10 @@ namespace Wumpus
             _wallWestOpen = Content.Load<Texture2D>("wall-west-open");
             _wallWestSolid = Content.Load<Texture2D>("wall-west-solid");
 
+            _groundTex = Content.Load<Texture2D>("ground");
+
+            _playerTex = Content.Load<Texture2D>("player");
+
             _solidWhite = new Texture2D(GraphicsDevice, 2, 2, false, SurfaceFormat.Color);
             _solidWhite.SetData(new [] { Color.White, Color.White, Color.White, Color.White });
 
@@ -86,11 +110,11 @@ namespace Wumpus
             _buttonSouthTex = Content.Load<Texture2D>("ui/button_south");
             _buttonWestTex = Content.Load<Texture2D>("ui/button_west");
 
-            var bounds = GraphicsDevice.Viewport.Bounds;
+            var bounds = _screenBounds;
             _buttonNorth = new Rectangle(bounds.Center.X - (_buttonNorthTex.Width / 2), 0, _buttonNorthTex.Width, _buttonNorthTex.Height);
-            _buttonEast = new Rectangle(bounds.Right - _buttonEastTex.Width, bounds.Center.Y - (_buttonNorthTex.Height / 2), _buttonEastTex.Width, _buttonNorthTex.Height);
+            _buttonEast = new Rectangle(bounds.Center.X + (_wallNorthSolid.Width / 2) - _buttonEastTex.Width, bounds.Center.Y - (_buttonNorthTex.Height / 2), _buttonEastTex.Width, _buttonNorthTex.Height);
             _buttonSouth = new Rectangle(bounds.Center.X - (_buttonSouthTex.Width / 2), bounds.Bottom - _buttonSouthTex.Height, _buttonSouthTex.Width, _buttonSouthTex.Height);
-            _buttonWest = new Rectangle(0, bounds.Center.Y - (_buttonWestTex.Height / 2), _buttonWestTex.Width, _buttonWestTex.Height);
+            _buttonWest = new Rectangle(bounds.Center.X - (_wallNorthSolid.Width / 2), bounds.Center.Y - (_buttonWestTex.Height / 2), _buttonWestTex.Width, _buttonWestTex.Height);
 
             // Setup the map.
             _map = new Map();
@@ -153,33 +177,46 @@ namespace Wumpus
 
         private void DrawRoom(GameTime gameTime)
         {
-            var center = GraphicsDevice.Viewport.Bounds.Center.ToVector2();
-            spriteBatch.Begin();
-
-            var wallHalfLength = _wallNorthSolid.Width / 2.0f;
-            var wallDepth = _wallNorthSolid.Height;
+            var screen = _screenBounds;
+            var center = screen.Center.ToVector2();
 
             var room = _map.PlayerRoom;
 
-            spriteBatch.Draw(room.NorthRoom != -1 ? _wallNorthOpen : _wallNorthSolid, new Vector2(center.X - wallHalfLength, center.Y - wallHalfLength));
-            spriteBatch.Draw(room.EastRoom != -1 ? _wallEastOpen : _wallEastSolid, new Vector2(center.X + wallHalfLength - wallDepth, center.Y - wallHalfLength));
-            spriteBatch.Draw(room.WestRoom != -1 ? _wallWestOpen : _wallWestSolid, new Vector2(center.X - wallHalfLength, center.Y - wallHalfLength));
-            spriteBatch.Draw(room.SouthRoom != -1 ? _wallSouthOpen : _wallSouthSolid, new Vector2(center.X - wallHalfLength, center.Y + wallHalfLength - wallDepth));
+            // Draw the ground.
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.LinearWrap, null, null, null, _screenXform);
+            spriteBatch.Draw(_groundTex, Vector2.Zero, screen, Color.White);
+            spriteBatch.End();
 
+            var roomHalfWidth = _wallNorthSolid.Width / 2.0f;
+            var wallDepth = _wallNorthSolid.Height;
+            var roomHalfHeight = _wallEastSolid.Height / 2.0f;
+
+            // Draw the room walls.
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
+            spriteBatch.Draw(room.NorthRoom != -1 ? _wallNorthOpen : _wallNorthSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
+            spriteBatch.Draw(room.EastRoom != -1 ? _wallEastOpen : _wallEastSolid, new Vector2(center.X + roomHalfWidth - wallDepth, center.Y - roomHalfHeight));
+            spriteBatch.Draw(room.WestRoom != -1 ? _wallWestOpen : _wallWestSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
+            spriteBatch.Draw(room.SouthRoom != -1 ? _wallSouthOpen : _wallSouthSolid, new Vector2(center.X - roomHalfWidth, center.Y + roomHalfHeight - wallDepth));
             spriteBatch.End();
         }
 
         private void DrawHud(GameTime gameTime)
         {
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
 
-            var room = string.Format("ROOM: {0}", _map.PlayerRoomIndex + 1);
-            spriteBatch.DrawString(_hudFont, room, new Vector2(20, 10), Color.White);
+            var room = _map.PlayerRoom;
 
-            spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
-            spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
-            spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
-            spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
+            var roomDesc = string.Format("ROOM: {0}", room.Index + 1);
+            spriteBatch.DrawString(_hudFont, roomDesc, new Vector2(20, 10), Color.White);
+
+            if (room.NorthRoom != -1)
+                spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
+            if (room.EastRoom != -1)
+                spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
+            if (room.SouthRoom != -1)
+                spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
+            if (room.WestRoom != -1)
+                spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
 
             spriteBatch.End();
         }
