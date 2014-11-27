@@ -30,13 +30,13 @@ namespace Wumpus
             }        
         }
 
-        public Room this[int row, int column]            
+        public Room this[int index]
         {
             get
             {
-                Debug.Assert(row > 0 && row < Rows);
-                Debug.Assert(column > 0 && column < Columns);
-                return _rooms[(row * Columns) + column];
+                Debug.Assert(index > -1);
+                Debug.Assert(index < _rooms.Length);
+                return _rooms[index];
             }
         }
 

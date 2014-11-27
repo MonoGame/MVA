@@ -15,6 +15,14 @@ namespace Wumpus
         private Map _map;
         private SpriteFont _hudFont;
 
+        private float _scrollPos;
+        private int _scrollOutRoom = -1;
+        private Vector2 _scrollOutStart;
+        private Vector2 _scrollOutEnd;
+        private int _scrollInRoom = -1;
+        private Vector2 _scrollInStart;
+        private Vector2 _scrollInEnd;
+
         private Texture2D _wallNorthOpen;
         private Texture2D _wallNorthSolid;
         private Texture2D _wallEastOpen;
@@ -27,8 +35,6 @@ namespace Wumpus
         private Texture2D _groundTex;
 
         private Texture2D _playerTex;
-
-        private Texture2D _solidWhite;
 
         private TouchLocation _lastTouch;
 
@@ -102,9 +108,6 @@ namespace Wumpus
 
             _playerTex = Content.Load<Texture2D>("player");
 
-            _solidWhite = new Texture2D(GraphicsDevice, 2, 2, false, SurfaceFormat.Color);
-            _solidWhite.SetData(new [] { Color.White, Color.White, Color.White, Color.White });
-
             _buttonNorthTex = Content.Load<Texture2D>("ui/button_north");
             _buttonEastTex = Content.Load<Texture2D>("ui/button_east");
             _buttonSouthTex = Content.Load<Texture2D>("ui/button_south");
@@ -137,23 +140,88 @@ namespace Wumpus
         protected override void Update(GameTime gameTime)
         {
             var touchState = TouchPanel.GetState();
-            if (touchState.Count > 0)
+            if (touchState.Count > 0 && _scrollOutRoom == -1 && _scrollInRoom == -1)
             {
                 var t1 = touchState[0];
 
                 if (t1.Id != _lastTouch.Id && t1.State == TouchLocationState.Pressed)
                 {
+                    var currentRoom = _map.PlayerRoomIndex;
                     if (_buttonNorth.Contains(t1.Position))
+                    {
                         _map.MovePlayerNorth();
+                        if (currentRoom != _map.PlayerRoomIndex)
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = currentRoom;
+                            _scrollOutStart = new Vector2(0, 0);
+                            _scrollOutEnd = new Vector2(0, 1080);
+                            _scrollInRoom = _map.PlayerRoomIndex;
+                            _scrollInStart = new Vector2(0, -1080);
+                            _scrollInEnd = new Vector2(0, 0);
+                        }
+                    }
                     else if (_buttonEast.Contains(t1.Position))
+                    {
                         _map.MovePlayerEast();
+                        if (currentRoom != _map.PlayerRoomIndex)
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = currentRoom;
+                            _scrollOutStart = new Vector2(0, 0);
+                            _scrollOutEnd = new Vector2(-1920, 0);
+                            _scrollInRoom = _map.PlayerRoomIndex;
+                            _scrollInStart = new Vector2(1920, 0);
+                            _scrollInEnd = new Vector2(0, 0);
+                        }
+                    }
                     else if (_buttonSouth.Contains(t1.Position))
+                    {
                         _map.MovePlayerSouth();
+                        if (currentRoom != _map.PlayerRoomIndex)
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = currentRoom;
+                            _scrollOutStart = new Vector2(0, 0);
+                            _scrollOutEnd = new Vector2(0, -1080);
+                            _scrollInRoom = _map.PlayerRoomIndex;
+                            _scrollInStart = new Vector2(0, 1080);
+                            _scrollInEnd = new Vector2(0, 0);
+                        }
+                    }
                     else if (_buttonWest.Contains(t1.Position))
+                    {
                         _map.MovePlayerWest();
+                        if (currentRoom != _map.PlayerRoomIndex)
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = currentRoom;
+                            _scrollOutStart = new Vector2(0, 0);
+                            _scrollOutEnd = new Vector2(1920, 0);
+                            _scrollInRoom = _map.PlayerRoomIndex;
+                            _scrollInStart = new Vector2(-1920, 0);
+                            _scrollInEnd = new Vector2(0, 0);
+                        }
+                    }
                 }
 
                 _lastTouch = t1;
+            }
+
+            _scrollPos = MathHelper.Clamp(_scrollPos + (float)gameTime.ElapsedGameTime.TotalSeconds * 2.0f, 0, 1);
+
+            if (_scrollOutRoom != -1)
+            {
+                if (_scrollPos == 1.0f)
+                {
+                    _scrollOutRoom = -1;
+                    _scrollPos = 0;
+                }
+            }
+            else if (_scrollInRoom != -1)
+            {
+                if (_scrollPos == 1.0f)
+                    _scrollInRoom = -1;
             }
 
             base.Update(gameTime);
@@ -179,12 +247,25 @@ namespace Wumpus
         {
             var screen = _screenBounds;
             var center = screen.Center.ToVector2();
-
             var room = _map.PlayerRoom;
+            var ground = Vector2.Zero;
+
+            if (_scrollOutRoom != -1)
+            {
+                room = _map[_scrollOutRoom];
+                center += Vector2.Lerp(_scrollOutStart, _scrollOutEnd, _scrollPos);
+                ground += Vector2.Lerp(_scrollOutStart, _scrollOutEnd, _scrollPos);
+            }
+            else if (_scrollInRoom != -1)
+            {
+                room = _map[_scrollInRoom];
+                center += Vector2.Lerp(_scrollInStart, _scrollInEnd, _scrollPos);
+                ground += Vector2.Lerp(_scrollInStart, _scrollInEnd, _scrollPos);
+            }            
 
             // Draw the ground.
             spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.LinearWrap, null, null, null, _screenXform);
-            spriteBatch.Draw(_groundTex, Vector2.Zero, screen, Color.White);
+            spriteBatch.Draw(_groundTex, ground, screen, Color.White);
             spriteBatch.End();
 
             var roomHalfWidth = _wallNorthSolid.Width / 2.0f;
@@ -209,14 +290,18 @@ namespace Wumpus
             var roomDesc = string.Format("ROOM: {0}", room.Index + 1);
             spriteBatch.DrawString(_hudFont, roomDesc, new Vector2(20, 10), Color.White);
 
-            if (room.NorthRoom != -1)
-                spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
-            if (room.EastRoom != -1)
-                spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
-            if (room.SouthRoom != -1)
-                spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
-            if (room.WestRoom != -1)
-                spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
+            // Only draw the movement buttons if the scene is not animating.
+            if (_scrollInRoom == -1 && _scrollOutRoom == -1)
+            {
+                if (room.NorthRoom != -1)
+                    spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
+                if (room.EastRoom != -1)
+                    spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
+                if (room.SouthRoom != -1)
+                    spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
+                if (room.WestRoom != -1)
+                    spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
+            }
 
             spriteBatch.End();
         }
