@@ -31,6 +31,11 @@ namespace Wumpus
         private Rectangle _buttonEast;
         private Rectangle _buttonSouth;
         private Rectangle _buttonWest;
+        private Texture2D _buttonNorthTex;
+        private Texture2D _buttonEastTex;
+        private Texture2D _buttonSouthTex;
+        private Texture2D _buttonWestTex;
+
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -51,15 +56,6 @@ namespace Wumpus
         protected override void Initialize()
         {
             base.Initialize();
-
-            var bounds = GraphicsDevice.Viewport.Bounds;
-
-            var buttonWidth = bounds.Width / 4;
-            var buttonHeight = bounds.Height / 4;
-            _buttonNorth = new Rectangle(buttonWidth, 0, buttonWidth * 2, buttonHeight);
-            _buttonEast = new Rectangle(bounds.Right - buttonHeight, buttonHeight, buttonHeight, buttonHeight * 2);
-            _buttonSouth = new Rectangle(buttonWidth, bounds.Bottom - buttonHeight, buttonWidth * 2, buttonHeight);
-            _buttonWest = new Rectangle(0, buttonHeight, buttonHeight, buttonHeight * 2);
         }
 
         /// <summary>
@@ -85,6 +81,17 @@ namespace Wumpus
             _solidWhite = new Texture2D(GraphicsDevice, 2, 2, false, SurfaceFormat.Color);
             _solidWhite.SetData(new [] { Color.White, Color.White, Color.White, Color.White });
 
+            _buttonNorthTex = Content.Load<Texture2D>("ui/button_north");
+            _buttonEastTex = Content.Load<Texture2D>("ui/button_east");
+            _buttonSouthTex = Content.Load<Texture2D>("ui/button_south");
+            _buttonWestTex = Content.Load<Texture2D>("ui/button_west");
+
+            var bounds = GraphicsDevice.Viewport.Bounds;
+            _buttonNorth = new Rectangle(bounds.Center.X - (_buttonNorthTex.Width / 2), 0, _buttonNorthTex.Width, _buttonNorthTex.Height);
+            _buttonEast = new Rectangle(bounds.Right - _buttonEastTex.Width, bounds.Center.Y - (_buttonNorthTex.Height / 2), _buttonEastTex.Width, _buttonNorthTex.Height);
+            _buttonSouth = new Rectangle(bounds.Center.X - (_buttonSouthTex.Width / 2), bounds.Bottom - _buttonSouthTex.Height, _buttonSouthTex.Width, _buttonSouthTex.Height);
+            _buttonWest = new Rectangle(0, bounds.Center.Y - (_buttonWestTex.Height / 2), _buttonWestTex.Width, _buttonWestTex.Height);
+
             // Setup the map.
             _map = new Map();
         }
@@ -109,6 +116,7 @@ namespace Wumpus
             if (touchState.Count > 0)
             {
                 var t1 = touchState[0];
+
                 if (t1.Id != _lastTouch.Id && t1.State == TouchLocationState.Pressed)
                 {
                     if (_buttonNorth.Contains(t1.Position))
@@ -168,10 +176,10 @@ namespace Wumpus
             var room = string.Format("ROOM: {0}", _map.PlayerRoomIndex + 1);
             spriteBatch.DrawString(_hudFont, room, new Vector2(20, 10), Color.White);
 
-            spriteBatch.Draw(_solidWhite, _buttonNorth, Color.Red);
-            spriteBatch.Draw(_solidWhite, _buttonEast, Color.Green);
-            spriteBatch.Draw(_solidWhite, _buttonSouth, Color.Blue);
-            spriteBatch.Draw(_solidWhite, _buttonWest, Color.White);
+            spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
+            spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
+            spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
+            spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
 
             spriteBatch.End();
         }
