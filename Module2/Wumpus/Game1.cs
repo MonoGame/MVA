@@ -32,16 +32,10 @@ namespace Wumpus
 
         private Texture2D _playerTex;
 
-        private TouchLocation _lastTouch;
-
-        private Rectangle _buttonNorth;
-        private Rectangle _buttonEast;
-        private Rectangle _buttonSouth;
-        private Rectangle _buttonWest;
-        private Texture2D _buttonNorthTex;
-        private Texture2D _buttonEastTex;
-        private Texture2D _buttonSouthTex;
-        private Texture2D _buttonWestTex;
+        private Button _buttonNorth;
+        private Button _buttonEast;
+        private Button _buttonSouth;
+        private Button _buttonWest;
 
         private readonly Rectangle _screenBounds;
         private readonly Matrix _screenXform;
@@ -103,16 +97,15 @@ namespace Wumpus
 
             _playerTex = Content.Load<Texture2D>("player");
 
-            _buttonNorthTex = Content.Load<Texture2D>("ui/button_north");
-            _buttonEastTex = Content.Load<Texture2D>("ui/button_east");
-            _buttonSouthTex = Content.Load<Texture2D>("ui/button_south");
-            _buttonWestTex = Content.Load<Texture2D>("ui/button_west");
+            var buttonNorthTex = Content.Load<Texture2D>("ui/button_north");
+            var buttonEastTex = Content.Load<Texture2D>("ui/button_east");
+            var buttonSouthTex = Content.Load<Texture2D>("ui/button_south");
+            var buttonWestTex = Content.Load<Texture2D>("ui/button_west");
 
-            var bounds = _screenBounds;
-            _buttonNorth = new Rectangle(bounds.Center.X - (_buttonNorthTex.Width / 2), 0, _buttonNorthTex.Width, _buttonNorthTex.Height);
-            _buttonEast = new Rectangle(bounds.Center.X + (_wallNorthSolid.Width / 2) - _buttonEastTex.Width, bounds.Center.Y - (_buttonNorthTex.Height / 2), _buttonEastTex.Width, _buttonNorthTex.Height);
-            _buttonSouth = new Rectangle(bounds.Center.X - (_buttonSouthTex.Width / 2), bounds.Bottom - _buttonSouthTex.Height, _buttonSouthTex.Width, _buttonSouthTex.Height);
-            _buttonWest = new Rectangle(bounds.Center.X - (_wallNorthSolid.Width / 2), bounds.Center.Y - (_buttonWestTex.Height / 2), _buttonWestTex.Width, _buttonWestTex.Height);
+            _buttonNorth = new Button(buttonNorthTex, _screenBounds.Center.X - (buttonNorthTex.Width / 2), 0);
+            _buttonEast = new Button(buttonEastTex, _screenBounds.Center.X + (_wallNorthSolid.Width / 2) - buttonEastTex.Width, _screenBounds.Center.Y - (buttonNorthTex.Height / 2));
+            _buttonSouth = new Button(buttonSouthTex, _screenBounds.Center.X - (buttonSouthTex.Width / 2), _screenBounds.Bottom - buttonSouthTex.Height);
+            _buttonWest = new Button(buttonWestTex, _screenBounds.Center.X - (_wallNorthSolid.Width / 2), _screenBounds.Center.Y - (buttonWestTex.Height / 2));
 
             // Setup the map.
             _map = new Map();
@@ -134,65 +127,59 @@ namespace Wumpus
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            var touchState = TouchPanel.GetState();
-            if (touchState.Count > 0 && _scrollOutRoom == -1 && _scrollInRoom == -1)
-            {
-                var t1 = touchState[0];
+            if (_scrollOutRoom == -1 && _scrollInRoom == -1)
+            { 
+                var touchState = TouchPanel.GetState();
+                var currentRoom = _map.PlayerRoomIndex;
 
-                if (t1.Id != _lastTouch.Id && t1.State == TouchLocationState.Pressed)
+                if (_buttonNorth.WasPressed(ref touchState))
                 {
-                    var currentRoom = _map.PlayerRoomIndex;
-                    if (_buttonNorth.Contains(t1.Position))
+                    _map.MovePlayerNorth();
+                    if (currentRoom != _map.PlayerRoomIndex)
                     {
-                        _map.MovePlayerNorth();
-                        if (currentRoom != _map.PlayerRoomIndex)
-                        {
-                            _scrollPos = 0;
-                            _scrollOutRoom = currentRoom;
-                            _scrollOutEnd = new Vector2(0, 1080);
-                            _scrollInRoom = _map.PlayerRoomIndex;
-                            _scrollInStart = new Vector2(0, -1080);
-                        }
-                    }
-                    else if (_buttonEast.Contains(t1.Position))
-                    {
-                        _map.MovePlayerEast();
-                        if (currentRoom != _map.PlayerRoomIndex)
-                        {
-                            _scrollPos = 0;
-                            _scrollOutRoom = currentRoom;
-                            _scrollOutEnd = new Vector2(-1920, 0);
-                            _scrollInRoom = _map.PlayerRoomIndex;
-                            _scrollInStart = new Vector2(1920, 0);
-                        }
-                    }
-                    else if (_buttonSouth.Contains(t1.Position))
-                    {
-                        _map.MovePlayerSouth();
-                        if (currentRoom != _map.PlayerRoomIndex)
-                        {
-                            _scrollPos = 0;
-                            _scrollOutRoom = currentRoom;
-                            _scrollOutEnd = new Vector2(0, -1080);
-                            _scrollInRoom = _map.PlayerRoomIndex;
-                            _scrollInStart = new Vector2(0, 1080);
-                        }
-                    }
-                    else if (_buttonWest.Contains(t1.Position))
-                    {
-                        _map.MovePlayerWest();
-                        if (currentRoom != _map.PlayerRoomIndex)
-                        {
-                            _scrollPos = 0;
-                            _scrollOutRoom = currentRoom;
-                            _scrollOutEnd = new Vector2(1920, 0);
-                            _scrollInRoom = _map.PlayerRoomIndex;
-                            _scrollInStart = new Vector2(-1920, 0);
-                        }
+                        _scrollPos = 0;
+                        _scrollOutRoom = currentRoom;
+                        _scrollOutEnd = new Vector2(0, 1080);
+                        _scrollInRoom = _map.PlayerRoomIndex;
+                        _scrollInStart = new Vector2(0, -1080);
                     }
                 }
-
-                _lastTouch = t1;
+                else if (_buttonEast.WasPressed(ref touchState))
+                {
+                    _map.MovePlayerEast();
+                    if (currentRoom != _map.PlayerRoomIndex)
+                    {
+                        _scrollPos = 0;
+                        _scrollOutRoom = currentRoom;
+                        _scrollOutEnd = new Vector2(-1920, 0);
+                        _scrollInRoom = _map.PlayerRoomIndex;
+                        _scrollInStart = new Vector2(1920, 0);
+                    }
+                }
+                else if (_buttonSouth.WasPressed(ref touchState))
+                {
+                    _map.MovePlayerSouth();
+                    if (currentRoom != _map.PlayerRoomIndex)
+                    {
+                        _scrollPos = 0;
+                        _scrollOutRoom = currentRoom;
+                        _scrollOutEnd = new Vector2(0, -1080);
+                        _scrollInRoom = _map.PlayerRoomIndex;
+                        _scrollInStart = new Vector2(0, 1080);
+                    }
+                }
+                else if (_buttonWest.WasPressed(ref touchState))
+                {
+                    _map.MovePlayerWest();
+                    if (currentRoom != _map.PlayerRoomIndex)
+                    {
+                        _scrollPos = 0;
+                        _scrollOutRoom = currentRoom;
+                        _scrollOutEnd = new Vector2(1920, 0);
+                        _scrollInRoom = _map.PlayerRoomIndex;
+                        _scrollInStart = new Vector2(-1920, 0);
+                    }
+                }
             }
 
             _scrollPos = MathHelper.Clamp(_scrollPos + (float)gameTime.ElapsedGameTime.TotalSeconds * 2.0f, 0, 1);
@@ -223,14 +210,13 @@ namespace Wumpus
             var device = GraphicsDevice;
             device.Clear(Color.Black);
 
-            DrawRoom(gameTime);
-
-            DrawHud(gameTime);
+            DrawRoom();
+            DrawHud();
             
             base.Draw(gameTime);
         }
 
-        private void DrawRoom(GameTime gameTime)
+        private void DrawRoom()
         {
             var screen = _screenBounds;
             var center = screen.Center.ToVector2();
@@ -270,7 +256,7 @@ namespace Wumpus
             _spriteBatch.End();
         }
 
-        private void DrawHud(GameTime gameTime)
+        private void DrawHud()
         {
             _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
 
@@ -283,13 +269,13 @@ namespace Wumpus
             if (_scrollInRoom == -1 && _scrollOutRoom == -1)
             {
                 if (room.NorthRoom != -1)
-                    _spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
+                    _buttonNorth.Draw(_spriteBatch);
                 if (room.EastRoom != -1)
-                    _spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
+                    _buttonEast.Draw(_spriteBatch);
                 if (room.SouthRoom != -1)
-                    _spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
+                    _buttonSouth.Draw(_spriteBatch);
                 if (room.WestRoom != -1)
-                    _spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
+                    _buttonWest.Draw(_spriteBatch);
             }
 
             _spriteBatch.End();
