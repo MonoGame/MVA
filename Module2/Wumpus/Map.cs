@@ -6,6 +6,8 @@ namespace Wumpus
 {
     class Map
     {
+        public delegate void OnPlayerMoved(int currentRoom, int newRoom);
+
         private readonly Room[] _rooms;
 
         public int Rows { get; private set; }
@@ -36,10 +38,10 @@ namespace Wumpus
             }
         }
 
-        public Map()
+        public Map(int seed)
         {
             // Need a random to generate the map.
-            var random = new Random(DateTime.Now.Millisecond);
+            var random = new Random(seed);
 
             // Create the empty rooms.
             Rows = 10;
@@ -77,32 +79,44 @@ namespace Wumpus
             PlayerRoomIndex = startRooms[random.Next(startRooms.Length)].Index;
         }
 
-        public void MovePlayerNorth()
+        public void MovePlayerNorth(OnPlayerMoved callback)
         {
             var room = PlayerRoom;
             if (room.NorthRoom != -1)
+            {
+                callback(PlayerRoomIndex, room.NorthRoom);
                 PlayerRoomIndex = room.NorthRoom;
+            }
         }
 
-        public void MovePlayerEast()
+        public void MovePlayerEast(OnPlayerMoved callback)
         {
             var room = PlayerRoom;
             if (room.EastRoom != -1)
+            {
+                callback(PlayerRoomIndex, room.EastRoom);
                 PlayerRoomIndex = room.EastRoom;
+            }
         }
 
-        public void MovePlayerSouth()
+        public void MovePlayerSouth(OnPlayerMoved callback)
         {
             var room = PlayerRoom;
             if (room.SouthRoom != -1)
+            {
+                callback(PlayerRoomIndex, room.SouthRoom);
                 PlayerRoomIndex = room.SouthRoom;
+            }
         }
 
-        public void MovePlayerWest()
+        public void MovePlayerWest(OnPlayerMoved callback)
         {
             var room = PlayerRoom;
             if (room.WestRoom != -1)
+            {
+                callback(PlayerRoomIndex, room.WestRoom);
                 PlayerRoomIndex = room.WestRoom;
+            }
         }
     }
 }

@@ -108,7 +108,7 @@ namespace Wumpus
             _buttonWest = new Button(buttonWestTex, _screenBounds.Center.X - (_wallNorthSolid.Width / 2), _screenBounds.Center.Y - (buttonWestTex.Height / 2));
 
             // Setup the map.
-            _map = new Map();
+            _map = new Map(DateTime.Now.Millisecond);
         }
 
         /// <summary>
@@ -130,55 +130,51 @@ namespace Wumpus
             if (_scrollOutRoom == -1 && _scrollInRoom == -1)
             { 
                 var touchState = TouchPanel.GetState();
-                var currentRoom = _map.PlayerRoomIndex;
 
                 if (_buttonNorth.WasPressed(ref touchState))
                 {
-                    _map.MovePlayerNorth();
-                    if (currentRoom != _map.PlayerRoomIndex)
+                    _map.MovePlayerNorth((curr, next) =>
                     {
                         _scrollPos = 0;
-                        _scrollOutRoom = currentRoom;
+                        _scrollOutRoom = curr;
                         _scrollOutEnd = new Vector2(0, 1080);
-                        _scrollInRoom = _map.PlayerRoomIndex;
+                        _scrollInRoom = next;
                         _scrollInStart = new Vector2(0, -1080);
-                    }
+                                             
+                    });
                 }
                 else if (_buttonEast.WasPressed(ref touchState))
                 {
-                    _map.MovePlayerEast();
-                    if (currentRoom != _map.PlayerRoomIndex)
+                    _map.MovePlayerEast((curr, next) =>
                     {
                         _scrollPos = 0;
-                        _scrollOutRoom = currentRoom;
+                        _scrollOutRoom = curr;
                         _scrollOutEnd = new Vector2(-1920, 0);
-                        _scrollInRoom = _map.PlayerRoomIndex;
+                        _scrollInRoom = next;
                         _scrollInStart = new Vector2(1920, 0);
-                    }
+                    });
                 }
                 else if (_buttonSouth.WasPressed(ref touchState))
                 {
-                    _map.MovePlayerSouth();
-                    if (currentRoom != _map.PlayerRoomIndex)
+                    _map.MovePlayerSouth((curr, next) =>
                     {
                         _scrollPos = 0;
-                        _scrollOutRoom = currentRoom;
+                        _scrollOutRoom = curr;
                         _scrollOutEnd = new Vector2(0, -1080);
-                        _scrollInRoom = _map.PlayerRoomIndex;
-                        _scrollInStart = new Vector2(0, 1080);
-                    }
+                        _scrollInRoom = next;
+                        _scrollInStart = new Vector2(0, 1080);                                             
+                    });
                 }
                 else if (_buttonWest.WasPressed(ref touchState))
                 {
-                    _map.MovePlayerWest();
-                    if (currentRoom != _map.PlayerRoomIndex)
+                    _map.MovePlayerWest((curr, next) =>
                     {
                         _scrollPos = 0;
-                        _scrollOutRoom = currentRoom;
+                        _scrollOutRoom = curr;
                         _scrollOutEnd = new Vector2(1920, 0);
-                        _scrollInRoom = _map.PlayerRoomIndex;
-                        _scrollInStart = new Vector2(-1920, 0);
-                    }
+                        _scrollInRoom = next;
+                        _scrollInStart = new Vector2(-1920, 0);                                            
+                    });
                 }
             }
 
