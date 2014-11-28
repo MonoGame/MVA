@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Wumpus
 {
-    //[DebuggerDisplay("R{Index} Trap:{HasTrap}")]
     class Room
     {
         public int Index { get; private set; }

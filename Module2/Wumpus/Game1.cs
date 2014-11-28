@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Input.Touch;
 
 namespace Wumpus
@@ -48,12 +46,11 @@ namespace Wumpus
         private readonly Rectangle _screenBounds;
         private readonly Matrix _screenXform;
 
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        SpriteBatch _spriteBatch;
 
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
+            var graphics = new GraphicsDeviceManager(this);
             graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             Content.RootDirectory = "Content";
 
@@ -89,7 +86,7 @@ namespace Wumpus
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             _hudFont = Content.Load<SpriteFont>("Segoe24");
 
@@ -256,46 +253,46 @@ namespace Wumpus
             }            
 
             // Draw the ground.
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.LinearWrap, null, null, null, _screenXform);
-            spriteBatch.Draw(_groundTex, ground, screen, Color.White);
-            spriteBatch.End();
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.LinearWrap, null, null, null, _screenXform);
+            _spriteBatch.Draw(_groundTex, ground, screen, Color.White);
+            _spriteBatch.End();
 
             var roomHalfWidth = _wallNorthSolid.Width / 2.0f;
             var wallDepth = _wallNorthSolid.Height;
             var roomHalfHeight = _wallEastSolid.Height / 2.0f;
 
             // Draw the room walls.
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
-            spriteBatch.Draw(room.NorthRoom != -1 ? _wallNorthOpen : _wallNorthSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
-            spriteBatch.Draw(room.EastRoom != -1 ? _wallEastOpen : _wallEastSolid, new Vector2(center.X + roomHalfWidth - wallDepth, center.Y - roomHalfHeight));
-            spriteBatch.Draw(room.WestRoom != -1 ? _wallWestOpen : _wallWestSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
-            spriteBatch.Draw(room.SouthRoom != -1 ? _wallSouthOpen : _wallSouthSolid, new Vector2(center.X - roomHalfWidth, center.Y + roomHalfHeight - wallDepth));
-            spriteBatch.End();
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
+            _spriteBatch.Draw(room.NorthRoom != -1 ? _wallNorthOpen : _wallNorthSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
+            _spriteBatch.Draw(room.EastRoom != -1 ? _wallEastOpen : _wallEastSolid, new Vector2(center.X + roomHalfWidth - wallDepth, center.Y - roomHalfHeight));
+            _spriteBatch.Draw(room.WestRoom != -1 ? _wallWestOpen : _wallWestSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
+            _spriteBatch.Draw(room.SouthRoom != -1 ? _wallSouthOpen : _wallSouthSolid, new Vector2(center.X - roomHalfWidth, center.Y + roomHalfHeight - wallDepth));
+            _spriteBatch.End();
         }
 
         private void DrawHud(GameTime gameTime)
         {
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
 
             var room = _map.PlayerRoom;
 
             var roomDesc = string.Format("ROOM: {0}", room.Index + 1);
-            spriteBatch.DrawString(_hudFont, roomDesc, new Vector2(20, 10), Color.White);
+            _spriteBatch.DrawString(_hudFont, roomDesc, new Vector2(20, 10), Color.White);
 
             // Only draw the movement buttons if the scene is not animating.
             if (_scrollInRoom == -1 && _scrollOutRoom == -1)
             {
                 if (room.NorthRoom != -1)
-                    spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
+                    _spriteBatch.Draw(_buttonNorthTex, _buttonNorth, Color.White);
                 if (room.EastRoom != -1)
-                    spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
+                    _spriteBatch.Draw(_buttonEastTex, _buttonEast, Color.White);
                 if (room.SouthRoom != -1)
-                    spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
+                    _spriteBatch.Draw(_buttonSouthTex, _buttonSouth, Color.White);
                 if (room.WestRoom != -1)
-                    spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
+                    _spriteBatch.Draw(_buttonWestTex, _buttonWest, Color.White);
             }
 
-            spriteBatch.End();
+            _spriteBatch.End();
         }
     }
 }
