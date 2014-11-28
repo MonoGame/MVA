@@ -17,11 +17,9 @@ namespace Wumpus
 
         private float _scrollPos;
         private int _scrollOutRoom = -1;
-        private Vector2 _scrollOutStart;
         private Vector2 _scrollOutEnd;
         private int _scrollInRoom = -1;
         private Vector2 _scrollInStart;
-        private Vector2 _scrollInEnd;
 
         private Texture2D _wallNorthOpen;
         private Texture2D _wallNorthSolid;
@@ -154,11 +152,9 @@ namespace Wumpus
                         {
                             _scrollPos = 0;
                             _scrollOutRoom = currentRoom;
-                            _scrollOutStart = new Vector2(0, 0);
                             _scrollOutEnd = new Vector2(0, 1080);
                             _scrollInRoom = _map.PlayerRoomIndex;
                             _scrollInStart = new Vector2(0, -1080);
-                            _scrollInEnd = new Vector2(0, 0);
                         }
                     }
                     else if (_buttonEast.Contains(t1.Position))
@@ -168,11 +164,9 @@ namespace Wumpus
                         {
                             _scrollPos = 0;
                             _scrollOutRoom = currentRoom;
-                            _scrollOutStart = new Vector2(0, 0);
                             _scrollOutEnd = new Vector2(-1920, 0);
                             _scrollInRoom = _map.PlayerRoomIndex;
                             _scrollInStart = new Vector2(1920, 0);
-                            _scrollInEnd = new Vector2(0, 0);
                         }
                     }
                     else if (_buttonSouth.Contains(t1.Position))
@@ -182,11 +176,9 @@ namespace Wumpus
                         {
                             _scrollPos = 0;
                             _scrollOutRoom = currentRoom;
-                            _scrollOutStart = new Vector2(0, 0);
                             _scrollOutEnd = new Vector2(0, -1080);
                             _scrollInRoom = _map.PlayerRoomIndex;
                             _scrollInStart = new Vector2(0, 1080);
-                            _scrollInEnd = new Vector2(0, 0);
                         }
                     }
                     else if (_buttonWest.Contains(t1.Position))
@@ -196,11 +188,9 @@ namespace Wumpus
                         {
                             _scrollPos = 0;
                             _scrollOutRoom = currentRoom;
-                            _scrollOutStart = new Vector2(0, 0);
                             _scrollOutEnd = new Vector2(1920, 0);
                             _scrollInRoom = _map.PlayerRoomIndex;
                             _scrollInStart = new Vector2(-1920, 0);
-                            _scrollInEnd = new Vector2(0, 0);
                         }
                     }
                 }
@@ -253,14 +243,16 @@ namespace Wumpus
             if (_scrollOutRoom != -1)
             {
                 room = _map[_scrollOutRoom];
-                center += Vector2.Lerp(_scrollOutStart, _scrollOutEnd, _scrollPos);
-                ground += Vector2.Lerp(_scrollOutStart, _scrollOutEnd, _scrollPos);
+                var offset = Vector2.Lerp(Vector2.Zero, _scrollOutEnd, _scrollPos);
+                center += offset;
+                ground += offset;
             }
             else if (_scrollInRoom != -1)
             {
                 room = _map[_scrollInRoom];
-                center += Vector2.Lerp(_scrollInStart, _scrollInEnd, _scrollPos);
-                ground += Vector2.Lerp(_scrollInStart, _scrollInEnd, _scrollPos);
+                var offset = Vector2.Lerp(_scrollInStart, Vector2.Zero, _scrollPos);
+                center += offset;
+                ground += offset;
             }            
 
             // Draw the ground.
