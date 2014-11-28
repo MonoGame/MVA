@@ -127,6 +127,7 @@ namespace Wumpus
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            // Process input only if we're not scrolling.
             if (_scrollOutRoom == -1 && _scrollInRoom == -1)
             { 
                 var touchState = TouchPanel.GetState();
@@ -139,8 +140,7 @@ namespace Wumpus
                         _scrollOutRoom = curr;
                         _scrollOutEnd = new Vector2(0, 1080);
                         _scrollInRoom = next;
-                        _scrollInStart = new Vector2(0, -1080);
-                                             
+                        _scrollInStart = new Vector2(0, -1080);                                             
                     });
                 }
                 else if (_buttonEast.WasPressed(ref touchState))
@@ -178,8 +178,10 @@ namespace Wumpus
                 }
             }
 
+            // Keep animating the scroll position.
             _scrollPos = MathHelper.Clamp(_scrollPos + (float)gameTime.ElapsedGameTime.TotalSeconds * 2.0f, 0, 1);
 
+            // Manage the scroll state.
             if (_scrollOutRoom != -1)
             {
                 if (_scrollPos == 1.0f)
