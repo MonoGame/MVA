@@ -50,6 +50,8 @@ namespace Wumpus
 
             // Ensure the current window is active
             Window.Current.Activate();
+
+            // Hide the status bar.
             StatusBar.GetForCurrentView().HideAsync();
         }
 
