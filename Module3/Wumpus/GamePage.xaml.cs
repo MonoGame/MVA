@@ -1,4 +1,5 @@
-﻿using Windows.UI.Xaml;
+﻿using Windows.Phone.UI.Input;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using MonoGame.Framework;
 
@@ -10,6 +11,7 @@ namespace Wumpus
     public sealed partial class GamePage : SwapChainBackgroundPanel
     {
         readonly Game1 _game;
+
         public GamePage()
         {
             this.InitializeComponent();

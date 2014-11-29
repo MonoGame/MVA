@@ -87,11 +87,15 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Button.cs" />
+    <Compile Include="DrawState.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="GamePage.xaml.cs">
       <DependentUpon>GamePage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="GameScreen.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="MenuScreen.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Room.cs" />
   </ItemGroup>

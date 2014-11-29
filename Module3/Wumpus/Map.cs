@@ -14,7 +14,7 @@ namespace Wumpus
 
         public int Columns { get; private set; }
 
-        public int MonsterRoom { get; private set; }
+        public int AlienRoom { get; private set; }
 
         public int WeaponRoom { get; private set; }
 
@@ -72,10 +72,10 @@ namespace Wumpus
           
             // Randomly place the monster in a room without traps or a weapon.
             var monsterRooms = _rooms.Where(e => !e.HasTrap && e.Index != WeaponRoom).ToArray();
-            MonsterRoom = monsterRooms[random.Next(monsterRooms.Length)].Index;
+            AlienRoom = monsterRooms[random.Next(monsterRooms.Length)].Index;
 
             // Pick a random location for the player.
-            var startRooms = _rooms.Where(e => !e.HasTrap && e.Index != WeaponRoom && e.Index != MonsterRoom).ToArray();
+            var startRooms = _rooms.Where(e => !e.HasTrap && e.Index != WeaponRoom && e.Index != AlienRoom).ToArray();
             PlayerRoomIndex = startRooms[random.Next(startRooms.Length)].Index;
         }
 
@@ -117,6 +117,38 @@ namespace Wumpus
                 callback(PlayerRoomIndex, room.WestRoom);
                 PlayerRoomIndex = room.WestRoom;
             }
+        }
+
+        public bool IsTrapNear(int index)
+        {
+            var room = _rooms[index];
+
+            if (room.NorthRoom != -1 && _rooms[room.NorthRoom].HasTrap)
+                return true;
+            if (room.EastRoom != -1 && _rooms[room.EastRoom].HasTrap)
+                return true;
+            if (room.SouthRoom != -1 && _rooms[room.SouthRoom].HasTrap)
+                return true;
+            if (room.WestRoom != -1 && _rooms[room.WestRoom].HasTrap)
+                return true;
+
+            return false;
+        }
+
+        public bool IsAlienNear(int index)
+        {
+            var room = _rooms[index];
+
+            if (room.NorthRoom == AlienRoom)
+                return true;
+            if (room.EastRoom == AlienRoom)
+                return true;
+            if (room.SouthRoom == AlienRoom)
+                return true;
+            if (room.WestRoom == AlienRoom)
+                return true;
+
+            return false;
         }
     }
 }

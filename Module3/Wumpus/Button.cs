@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Microsoft.VisualBasic.CompilerServices;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input.Touch;
 
@@ -7,9 +8,22 @@ namespace Wumpus
     class Button
     {
         private Rectangle _location;
+
         private readonly Texture2D _pressTex;
+
+        private readonly SpriteFont _font;
+        private readonly string _text;
+
         private int _lastTouchId;
         private bool _pressed;
+
+        public Button(SpriteFont font, string text, int posX, int posY)
+        {
+            _font = font;
+            _text = text;
+            var size = _font.MeasureString(text);
+            _location = new Rectangle(posX - (int)(size.X / 2.0f), posY - (int)(size.Y / 2.0f), (int)size.X, (int)size.Y);
+        }
 
         public Button(Texture2D pressTex, int posX, int posY)
         {
@@ -39,9 +53,12 @@ namespace Wumpus
             return false;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(DrawState state)
         {
-            spriteBatch.Draw(_pressTex, _location, _pressed ? Color.DarkGray : Color.White);
+            if (_pressTex != null)
+                state.SpriteBatch.Draw(_pressTex, _location, _pressed ? Color.DarkGray : Color.White);
+            else
+                state.SpriteBatch.DrawString(_font, _text, new Vector2(_location.X, _location.Y),  _pressed ? Color.DarkGray : Color.White);
         }
     }
 }
