@@ -64,7 +64,8 @@ namespace Wumpus
             _menuScreen = new MenuScreen(Content, _drawState.ScreenBounds);
             _menuScreen.OnStart += () =>
             {
-                _gameScreen = new GameScreen(Content, _drawState.ScreenBounds);  
+                _gameScreen = new GameScreen(Content, _drawState.ScreenBounds);
+                _gameScreen.OnGameOver += () => _gameScreen = null;
             };
         }
 

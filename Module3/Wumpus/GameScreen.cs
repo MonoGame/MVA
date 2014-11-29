@@ -43,6 +43,10 @@ namespace Wumpus
         private Button _buttonSouth;
         private Button _buttonWest;
 
+        private TimeSpan _gameOverTimer;
+
+        public event Action OnGameOver;
+        
         public GameScreen(ContentManager content, Rectangle screenBounds)
         {
             _hudFont = content.Load<SpriteFont>("Segoe24");
@@ -85,6 +89,15 @@ namespace Wumpus
 
         public void Update(GameTime gameTime, TouchCollection touchState)
         {
+            // If the player is dead handle the game over timer.
+            if (_player.IsDead)
+            {
+                _gameOverTimer += gameTime.ElapsedGameTime;
+                if (_gameOverTimer > TimeSpan.FromSeconds(5.0f))
+                    OnGameOver();
+                return;
+            }
+
             // Process input only if we're not scrolling.
             if (_scrollOutRoom == -1 && _scrollInRoom == -1)
             {
