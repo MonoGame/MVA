@@ -61,9 +61,13 @@ namespace Wumpus
         protected override void LoadContent()
         {
             _drawState = new DrawState(GraphicsDevice);
+
             _menuScreen = new MenuScreen(Content, _drawState.ScreenBounds);
             _menuScreen.OnStart += () =>
             {
+                if (MediaPlayer.GameHasControl)
+                    MediaPlayer.Stop();
+
                 _gameScreen = new GameScreen(Content, _drawState.ScreenBounds);
                 _gameScreen.OnGameOver += () => _gameScreen = null;
             };
