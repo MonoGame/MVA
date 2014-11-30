@@ -45,14 +45,14 @@ namespace Wumpus
         private SoundEffectInstance _trapNearSound;
         private SoundEffectInstance _alienNearSound;
         private SoundEffect _deathStingSound;
+        private SoundEffect _famethrowerStingSound;
 
         private Button _buttonNorth;
         private Button _buttonEast;
         private Button _buttonSouth;
         private Button _buttonWest;
 
-        private TimeSpan _trapTimer;
-        private TimeSpan _gameOverTimer;
+        private TimeSpan _roomTimer;
 
         public event Action OnGameOver;
         
@@ -85,6 +85,7 @@ namespace Wumpus
             _trapNearSound = content.Load<SoundEffect>("sounds/trap_near").CreateInstance();
             _alienNearSound = content.Load<SoundEffect>("sounds/alien-near").CreateInstance();
             _deathStingSound = content.Load<SoundEffect>("sounds/death-sting");
+            _famethrowerStingSound = content.Load<SoundEffect>("sounds/flamethrower-pickup");
 
             var buttonNorthTex = content.Load<Texture2D>("ui/button_north");
             var buttonEastTex = content.Load<Texture2D>("ui/button_east");
@@ -106,17 +107,23 @@ namespace Wumpus
 
         public void Update(GameTime gameTime, TouchCollection touchState)
         {
+            _roomTimer += gameTime.ElapsedGameTime;
+            var room = _map.PlayerRoom;
+
             // Are we doing the trap animation?
-            if (_trapTimer > TimeSpan.Zero)
+            if (room.HasTrap && _scrollInRoom == -1)
             {
-                _trapTimer -= gameTime.ElapsedGameTime;
-                if (_trapTimer <= TimeSpan.Zero)
+                if (_roomTimer > TimeSpan.FromSeconds(1.5f))
                 {
                     _player.Damage();
-                    _map.PlayerRoom.HasTrap = false;
+                    room.HasTrap = false;
 
                     if (_player.IsDead)
+                    {
+                        _trapNearSound.Stop();
+                        _alienNearSound.Stop();
                         _deathStingSound.Play();
+                    }
                 }
 
                 return;
@@ -125,8 +132,7 @@ namespace Wumpus
             // If the player is dead handle the game over timer.
             if (_player.IsDead)
             {
-                _gameOverTimer += gameTime.ElapsedGameTime;
-                if (_gameOverTimer > TimeSpan.FromSeconds(5.0f))
+                if (_roomTimer > TimeSpan.FromSeconds(5.0f))
                     OnGameOver();
                 return;
             }
@@ -208,7 +214,12 @@ namespace Wumpus
 
         private void OnEnterRoom()
         {
+            _roomTimer = TimeSpan.Zero;
+
             var room = _map.PlayerRoom;
+
+            if (room.HasTrap)
+                _trapHurtSound.Play();
 
             if (_map.IsTrapNear(room.Index))
             {
@@ -218,11 +229,9 @@ namespace Wumpus
             else
                 _trapNearSound.Stop();
 
-            if (room.HasTrap)
+            if (_map.WeaponRoom == room.Index)
             {
-                _trapNearSound.Stop();
-                _trapHurtSound.Play();
-                _trapTimer = TimeSpan.FromSeconds(1.5f);
+                _famethrowerStingSound.Play();
             }
 
             if (_map.IsAlienNear(room.Index))
@@ -302,9 +311,9 @@ namespace Wumpus
                 state.SpriteBatch.Draw(_alienTex, center - half, Color.White);
             }
 
-            if (room.HasTrap)
+            if (room.HasTrap && _scrollInRoom == -1)
             {
-                var frameN = 8 - (int)Math.Floor((_trapTimer.TotalSeconds / 1.5f) * 8);
+                var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
                 var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
                 state.SpriteBatch.Draw(_trapTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
             }
@@ -324,7 +333,7 @@ namespace Wumpus
             var room = _map.PlayerRoom;
 
             // Only draw the movement buttons if the scene is not animating.
-            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && _trapTimer <= TimeSpan.Zero)
+            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && !room.HasTrap)
             {
                 if (room.NorthRoom != -1)
                     _buttonNorth.Draw(state);
@@ -337,7 +346,7 @@ namespace Wumpus
 
                 if (_map.IsTrapNear(room.Index))
                 {
-                    var frameN = (int) Math.Floor(gameTime.TotalGameTime.TotalSeconds % 2.0f);
+                    var frameN = (int) Math.Floor(_roomTimer.TotalSeconds % 2.0f);
                     var frame = new Rectangle(frameN * _trapWarnTex.Height, 0, _trapWarnTex.Height, _trapWarnTex.Height);
                     state.SpriteBatch.Draw(_trapWarnTex, new Vector2(state.ScreenBounds.Left, state.ScreenBounds.Bottom - _trapWarnTex.Height), frame, Color.White);
                     //state.SpriteBatch.DrawString(_hudFont, "You hear ticking!", new Vector2(20, 108), Color.White);

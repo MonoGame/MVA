@@ -281,3 +281,9 @@
 /processorParam:Quality=Best
 /build:sounds/alien-near.wav
 
+#begin sounds/flamethrower-pickup.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sounds/flamethrower-pickup.wav
+
