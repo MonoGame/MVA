@@ -50,8 +50,8 @@ namespace Wumpus
             // By setting the display size on the touch
             // panel to the virtual display size it will
             // automatically scale the touch input.
-            TouchPanel.DisplayWidth = 1920;
-            TouchPanel.DisplayHeight = 1080;
+            TouchPanel.DisplayWidth = _drawState.ScreenBounds.Width;
+            TouchPanel.DisplayHeight = _drawState.ScreenBounds.Height;
         }
 
         /// <summary>
