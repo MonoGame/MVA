@@ -108,7 +108,7 @@ namespace Wumpus
             _buttonWest = new Button(buttonWestTex, _screenBounds.Center.X - (_wallNorthSolid.Width / 2), _screenBounds.Center.Y - (buttonWestTex.Height / 2));
 
             // Setup the map.
-            _map = new Map(DateTime.Now.Millisecond);
+            _map = new Map(Environment.TickCount);
         }
 
         /// <summary>
