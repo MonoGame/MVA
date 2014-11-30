@@ -1,7 +1,5 @@
-﻿using System;
-using Windows.Phone.UI.Input;
+﻿using Windows.Phone.UI.Input;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input.Touch;
 using Microsoft.Xna.Framework.Media;
 
@@ -14,6 +12,7 @@ namespace Wumpus
     {
         private DrawState _drawState;
 
+        // TODO: Point them to game state sample.
         private MenuScreen _menuScreen;
         private GameScreen _gameScreen;
 
@@ -30,12 +29,21 @@ namespace Wumpus
 
         private void OnBackButton(object sender, BackPressedEventArgs e)
         {
-            if (_gameScreen != null)
+            if (_gameScreen == null)
             {
-                // Ask about quitting the game first.
+                e.Handled = false;
             }
-
-            e.Handled = true;
+            else
+            {
+                e.Handled = true;
+                /*
+                var dlg = new MessageDialog("Are you sure you want to quit the game?");
+                dlg.Commands.Add(new UICommand("Yes", command => e.Handled = false));
+                dlg.Commands.Add(new UICommand("No", command => e.Handled = true));
+                dlg.CancelCommandIndex = 1;
+                dlg.ShowAsync();
+                */
+            }
         }
 
         /// <summary>
