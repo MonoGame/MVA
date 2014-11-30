@@ -14,9 +14,13 @@ namespace Wumpus
 
         private readonly Button _startButton;
 
+        private readonly Song _song;
+
         public MenuScreen(ContentManager content, Rectangle screenBounds)
         {
             _menuFont = content.Load<SpriteFont>("GameOver");
+
+            _song = content.Load<Song>("music/Blown Away - Menu");
 
             var center = screenBounds.Center;
             _startButton = new Button(_menuFont, "Start", center.X, center.Y + 100);
@@ -24,6 +28,9 @@ namespace Wumpus
 
         public void Update(GameTime gameTime, TouchCollection touchState)
         {
+            if (MediaPlayer.State != MediaState.Playing && MediaPlayer.GameHasControl)
+                MediaPlayer.Play(_song);
+
             if (_startButton.WasPressed(ref touchState))
                 OnStart();
         }
