@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input.Touch;
@@ -9,6 +10,8 @@ namespace Wumpus
     class GameScreen
     {
         private Map _map;
+
+        private Player _player;
 
         private SpriteFont _hudFont;
         private SpriteFont _gameOverFont;
@@ -34,15 +37,21 @@ namespace Wumpus
         private Texture2D _alienTex;
 
         private Texture2D _trapTex;
+        private Texture2D _trapWarnTex;
         private Texture2D _healthTex;
 
-        private Player _player;
+        private SoundEffect _footstepsSound;
+        private SoundEffect _trapHurtSound;
+        private SoundEffectInstance _trapNearSound;
+        private SoundEffectInstance _alienNearSound;
+        private SoundEffect _deathStingSound;
 
         private Button _buttonNorth;
         private Button _buttonEast;
         private Button _buttonSouth;
         private Button _buttonWest;
 
+        private TimeSpan _trapTimer;
         private TimeSpan _gameOverTimer;
 
         public event Action OnGameOver;
@@ -67,8 +76,15 @@ namespace Wumpus
             _alienTex = content.Load<Texture2D>("alien/alien");
 
             _trapTex = content.Load<Texture2D>("trap");
+            _trapWarnTex = content.Load<Texture2D>("ui/beep-beep");
 
             _healthTex = content.Load<Texture2D>("ui/health");
+
+            _footstepsSound = content.Load<SoundEffect>("sounds/footsteps");
+            _trapHurtSound = content.Load<SoundEffect>("sounds/trap_hurt");
+            _trapNearSound = content.Load<SoundEffect>("sounds/trap_near").CreateInstance();
+            _alienNearSound = content.Load<SoundEffect>("sounds/alien-near").CreateInstance();
+            _deathStingSound = content.Load<SoundEffect>("sounds/death-sting");
 
             var buttonNorthTex = content.Load<Texture2D>("ui/button_north");
             var buttonEastTex = content.Load<Texture2D>("ui/button_east");
@@ -80,15 +96,32 @@ namespace Wumpus
             _buttonSouth = new Button(buttonSouthTex, screenBounds.Center.X - (buttonSouthTex.Width / 2), screenBounds.Bottom - buttonSouthTex.Height);
             _buttonWest = new Button(buttonWestTex, screenBounds.Center.X - (_wallNorthSolid.Width / 2), screenBounds.Center.Y - (buttonWestTex.Height / 2));
 
-            // Setup the map.
-            _map = new Map(DateTime.Now.Millisecond);
-
             // Setup the player.
-            _player = new Player();            
+            _player = new Player();
+
+            // Setup the map.
+            _map = new Map(Environment.TickCount);            
+            OnEnterRoom();
         }
 
         public void Update(GameTime gameTime, TouchCollection touchState)
         {
+            // Are we doing the trap animation?
+            if (_trapTimer > TimeSpan.Zero)
+            {
+                _trapTimer -= gameTime.ElapsedGameTime;
+                if (_trapTimer <= TimeSpan.Zero)
+                {
+                    _player.Damage();
+                    _map.PlayerRoom.HasTrap = false;
+
+                    if (_player.IsDead)
+                        _deathStingSound.Play();
+                }
+
+                return;
+            }
+
             // If the player is dead handle the game over timer.
             if (_player.IsDead)
             {
@@ -110,6 +143,7 @@ namespace Wumpus
                         _scrollOutEnd = new Vector2(0, 1080);
                         _scrollInRoom = next;
                         _scrollInStart = new Vector2(0, -1080);
+                        _footstepsSound.Play();
                     });
                 }
                 else if (_buttonEast.WasPressed(ref touchState))
@@ -121,6 +155,7 @@ namespace Wumpus
                         _scrollOutEnd = new Vector2(-1920, 0);
                         _scrollInRoom = next;
                         _scrollInStart = new Vector2(1920, 0);
+                        _footstepsSound.Play();
                     });
                 }
                 else if (_buttonSouth.WasPressed(ref touchState))
@@ -132,6 +167,7 @@ namespace Wumpus
                         _scrollOutEnd = new Vector2(0, -1080);
                         _scrollInRoom = next;
                         _scrollInStart = new Vector2(0, 1080);
+                        _footstepsSound.Play();
                     });
                 }
                 else if (_buttonWest.WasPressed(ref touchState))
@@ -143,6 +179,7 @@ namespace Wumpus
                         _scrollOutEnd = new Vector2(1920, 0);
                         _scrollInRoom = next;
                         _scrollInStart = new Vector2(-1920, 0);
+                        _footstepsSound.Play();
                     });
                 }
             }
@@ -173,15 +210,33 @@ namespace Wumpus
         {
             var room = _map.PlayerRoom;
 
+            if (_map.IsTrapNear(room.Index))
+            {
+                _trapNearSound.IsLooped = true;
+                _trapNearSound.Play();
+            }
+            else
+                _trapNearSound.Stop();
+
             if (room.HasTrap)
             {
-                _player.Damage();
-                room.HasTrap = false;
+                _trapNearSound.Stop();
+                _trapHurtSound.Play();
+                _trapTimer = TimeSpan.FromSeconds(1.5f);
             }
+
+            if (_map.IsAlienNear(room.Index))
+            {
+                _alienNearSound.IsLooped = true;
+                _alienNearSound.Play();
+            }
+            else
+                _alienNearSound.Stop();
 
             if (_map.AlienRoom == room.Index)
             {
                 _player.Kill();
+                _deathStingSound.Play();
             }
         }
 
@@ -247,6 +302,13 @@ namespace Wumpus
                 state.SpriteBatch.Draw(_alienTex, center - half, Color.White);
             }
 
+            if (room.HasTrap)
+            {
+                var frameN = 8 - (int)Math.Floor((_trapTimer.TotalSeconds / 1.5f) * 8);
+                var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
+                state.SpriteBatch.Draw(_trapTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
+            }
+
             // Draw the room walls.
             state.SpriteBatch.Draw(room.NorthRoom != -1 ? _wallNorthOpen : _wallNorthSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
             state.SpriteBatch.Draw(room.EastRoom != -1 ? _wallEastOpen : _wallEastSolid, new Vector2(center.X + roomHalfWidth - wallDepth, center.Y - roomHalfHeight));
@@ -262,7 +324,7 @@ namespace Wumpus
             var room = _map.PlayerRoom;
 
             // Only draw the movement buttons if the scene is not animating.
-            if (_scrollInRoom == -1 && _scrollOutRoom == -1)
+            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && _trapTimer <= TimeSpan.Zero)
             {
                 if (room.NorthRoom != -1)
                     _buttonNorth.Draw(state);
@@ -273,11 +335,13 @@ namespace Wumpus
                 if (room.WestRoom != -1)
                     _buttonWest.Draw(state);
 
-                if (room.HasTrap)
-                    state.SpriteBatch.Draw(_trapTex, state.ScreenBounds.Center.ToVector2(), Color.White);
-
                 if (_map.IsTrapNear(room.Index))
-                    state.SpriteBatch.DrawString(_hudFont, "You hear ticking!", new Vector2(20, 108), Color.White);
+                {
+                    var frameN = (int) Math.Floor(gameTime.TotalGameTime.TotalSeconds % 2.0f);
+                    var frame = new Rectangle(frameN * _trapWarnTex.Height, 0, _trapWarnTex.Height, _trapWarnTex.Height);
+                    state.SpriteBatch.Draw(_trapWarnTex, new Vector2(state.ScreenBounds.Left, state.ScreenBounds.Bottom - _trapWarnTex.Height), frame, Color.White);
+                    //state.SpriteBatch.DrawString(_hudFont, "You hear ticking!", new Vector2(20, 108), Color.White);
+                }
             }
 
             // Draw the health.
