@@ -3,6 +3,7 @@ using Windows.Phone.UI.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input.Touch;
+using Microsoft.Xna.Framework.Media;
 
 namespace Wumpus
 {
@@ -108,9 +109,9 @@ namespace Wumpus
             GraphicsDevice.Clear(Color.Black);
 
             if (_gameScreen != null)
-                _gameScreen.Draw(_drawState);
+                _gameScreen.Draw(gameTime, _drawState);
             else
-                _menuScreen.Draw(_drawState);
+                _menuScreen.Draw(gameTime, _drawState);
 
             base.Draw(gameTime);
         }

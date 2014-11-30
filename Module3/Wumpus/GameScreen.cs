@@ -185,14 +185,14 @@ namespace Wumpus
             }
         }
 
-        public void Draw(DrawState state)
+        public void Draw(GameTime gameTime, DrawState state)
         {
             DrawRoom(state);
 
             if (_player.IsDead)
                 DrawGameOver(state);
             else
-                DrawHud(state);            
+                DrawHud(gameTime, state);            
         }
 
         private void DrawRoom(DrawState state)
@@ -255,7 +255,7 @@ namespace Wumpus
             state.SpriteBatch.End();
         }
 
-        private void DrawHud(DrawState state)
+        private void DrawHud(GameTime gameTime, DrawState state)
         {
             state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
 
