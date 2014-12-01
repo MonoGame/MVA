@@ -16,7 +16,7 @@ namespace Wumpus
 
         public int AlienRoom { get; private set; }
 
-        public int WeaponRoom { get; private set; }
+        public int WeaponRoom { get; set; }
 
         public int PlayerRoomIndex { get; private set; }
 

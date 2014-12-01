@@ -6,7 +6,7 @@ namespace Wumpus
     {
         public int Health { get; private set; }
 
-        public bool HasWeapon { get; private set; }
+        public bool HasWeapon { get; set; }
 
         public bool IsDead 
         {

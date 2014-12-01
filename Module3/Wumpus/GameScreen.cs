@@ -40,6 +40,9 @@ namespace Wumpus
         private Texture2D _trapWarnTex;
         private Texture2D _healthTex;
 
+        private Texture2D _flamethrowerTex;
+        private Texture2D _flamesTex;
+
         private SoundEffect _footstepsSound;
         private SoundEffect _trapHurtSound;
         private SoundEffectInstance _trapNearSound;
@@ -51,6 +54,14 @@ namespace Wumpus
         private Button _buttonEast;
         private Button _buttonSouth;
         private Button _buttonWest;
+
+        private bool _attackMode;
+
+        private Button _flameThrowerButton;
+        private Button _attackButtonNorth;
+        private Button _attackButtonEast;
+        private Button _attackButtonSouth;
+        private Button _attackButtonWest;
 
         private TimeSpan _roomTimer;
 
@@ -80,6 +91,9 @@ namespace Wumpus
 
             _healthTex = content.Load<Texture2D>("ui/health");
 
+            _flamethrowerTex = content.Load<Texture2D>("flamethrower");
+            _flamesTex = content.Load<Texture2D>("flames");
+
             _footstepsSound = content.Load<SoundEffect>("sounds/footsteps");
             _trapHurtSound = content.Load<SoundEffect>("sounds/trap_hurt");
             _trapNearSound = content.Load<SoundEffect>("sounds/trap_near").CreateInstance();
@@ -87,15 +101,32 @@ namespace Wumpus
             _deathStingSound = content.Load<SoundEffect>("sounds/death-sting");
             _famethrowerStingSound = content.Load<SoundEffect>("sounds/flamethrower-pickup");
 
-            var buttonNorthTex = content.Load<Texture2D>("ui/button_north");
-            var buttonEastTex = content.Load<Texture2D>("ui/button_east");
-            var buttonSouthTex = content.Load<Texture2D>("ui/button_south");
-            var buttonWestTex = content.Load<Texture2D>("ui/button_west");
+            { 
+                var buttonNorthTex = content.Load<Texture2D>("ui/button_north");
+                var buttonEastTex = content.Load<Texture2D>("ui/button_east");
+                var buttonSouthTex = content.Load<Texture2D>("ui/button_south");
+                var buttonWestTex = content.Load<Texture2D>("ui/button_west");
 
-            _buttonNorth = new Button(buttonNorthTex, screenBounds.Center.X - (buttonNorthTex.Width / 2), 0);
-            _buttonEast = new Button(buttonEastTex, screenBounds.Center.X + (_wallNorthSolid.Width / 2) - buttonEastTex.Width, screenBounds.Center.Y - (buttonNorthTex.Height / 2));
-            _buttonSouth = new Button(buttonSouthTex, screenBounds.Center.X - (buttonSouthTex.Width / 2), screenBounds.Bottom - buttonSouthTex.Height);
-            _buttonWest = new Button(buttonWestTex, screenBounds.Center.X - (_wallNorthSolid.Width / 2), screenBounds.Center.Y - (buttonWestTex.Height / 2));
+                _buttonNorth = new Button(buttonNorthTex, screenBounds.Center.X - (buttonNorthTex.Width / 2), 0);
+                _buttonEast = new Button(buttonEastTex, screenBounds.Center.X + (_wallNorthSolid.Width / 2) - buttonEastTex.Width, screenBounds.Center.Y - (buttonNorthTex.Height / 2));
+                _buttonSouth = new Button(buttonSouthTex, screenBounds.Center.X - (buttonSouthTex.Width / 2), screenBounds.Bottom - buttonSouthTex.Height);
+                _buttonWest = new Button(buttonWestTex, screenBounds.Center.X - (_wallNorthSolid.Width / 2), screenBounds.Center.Y - (buttonWestTex.Height / 2));
+            }
+
+            { 
+                var flameThrowerBtnTex = content.Load<Texture2D>("ui/flamethrower");
+                _flameThrowerButton = new Button(flameThrowerBtnTex, screenBounds.Right - flameThrowerBtnTex.Width, screenBounds.Bottom - flameThrowerBtnTex.Height);
+
+                var buttonNorthTex = content.Load<Texture2D>("ui/attack_north");
+                var buttonEastTex = content.Load<Texture2D>("ui/attack_east");
+                var buttonSouthTex = content.Load<Texture2D>("ui/attack_south");
+                var buttonWestTex = content.Load<Texture2D>("ui/attack_west");
+
+                _attackButtonNorth = new Button(buttonNorthTex, screenBounds.Center.X - (buttonNorthTex.Width / 2), 0);
+                _attackButtonEast = new Button(buttonEastTex, screenBounds.Center.X + (_wallNorthSolid.Width / 2) - buttonEastTex.Width, screenBounds.Center.Y - (buttonNorthTex.Height / 2));
+                _attackButtonSouth = new Button(buttonSouthTex, screenBounds.Center.X - (buttonSouthTex.Width / 2), screenBounds.Bottom - buttonSouthTex.Height);
+                _attackButtonWest = new Button(buttonWestTex, screenBounds.Center.X - (_wallNorthSolid.Width / 2), screenBounds.Center.Y - (buttonWestTex.Height / 2));
+            }
 
             // Setup the player.
             _player = new Player();
@@ -110,24 +141,39 @@ namespace Wumpus
             _roomTimer += gameTime.ElapsedGameTime;
             var room = _map.PlayerRoom;
 
-            // Are we doing the trap animation?
-            if (room.HasTrap && _scrollInRoom == -1)
+            if (_scrollInRoom == -1)
             {
-                if (_roomTimer > TimeSpan.FromSeconds(1.5f))
+                // Are we doing the trap animation?
+                if (room.HasTrap)
                 {
-                    _player.Damage();
-                    room.HasTrap = false;
-
-                    if (_player.IsDead)
+                    if (_roomTimer > TimeSpan.FromSeconds(1.5f))
                     {
-                        _trapNearSound.Stop();
-                        _alienNearSound.Stop();
-                        _deathStingSound.Play();
+                        _player.Damage();
+                        room.HasTrap = false;
+
+                        if (_player.IsDead)
+                        {
+                            _trapNearSound.Stop();
+                            _alienNearSound.Stop();
+                            _deathStingSound.Play();
+                        }
                     }
+
+                    return;
                 }
 
-                return;
+                if (room.Index == _map.WeaponRoom)
+                {
+                    if (_roomTimer > TimeSpan.FromSeconds(2.5f))
+                    {
+                        _player.HasWeapon = true;
+                        _map.WeaponRoom = -1;
+                    }
+
+                    return;   
+                }
             }
+
 
             // If the player is dead handle the game over timer.
             if (_player.IsDead)
@@ -140,53 +186,74 @@ namespace Wumpus
             // Process input only if we're not scrolling.
             if (_scrollOutRoom == -1 && _scrollInRoom == -1)
             {
-                if (_buttonNorth.WasPressed(ref touchState))
+                if (_player.HasWeapon && _flameThrowerButton.WasPressed(ref touchState))
+                    _attackMode = !_attackMode;
+
+                if (_attackMode)
                 {
-                    _map.MovePlayerNorth((curr, next) =>
+                    if (_attackButtonNorth.WasPressed(ref touchState))
                     {
-                        _scrollPos = 0;
-                        _scrollOutRoom = curr;
-                        _scrollOutEnd = new Vector2(0, 1080);
-                        _scrollInRoom = next;
-                        _scrollInStart = new Vector2(0, -1080);
-                        _footstepsSound.Play();
-                    });
+                    }
+                    else if (_attackButtonEast.WasPressed(ref touchState))
+                    {
+                    }
+                    else if (_attackButtonSouth.WasPressed(ref touchState))
+                    {
+                    }
+                    else if (_attackButtonWest.WasPressed(ref touchState))
+                    {
+                    }                    
                 }
-                else if (_buttonEast.WasPressed(ref touchState))
-                {
-                    _map.MovePlayerEast((curr, next) =>
+                else
+                { 
+                    if (_buttonNorth.WasPressed(ref touchState))
                     {
-                        _scrollPos = 0;
-                        _scrollOutRoom = curr;
-                        _scrollOutEnd = new Vector2(-1920, 0);
-                        _scrollInRoom = next;
-                        _scrollInStart = new Vector2(1920, 0);
-                        _footstepsSound.Play();
-                    });
-                }
-                else if (_buttonSouth.WasPressed(ref touchState))
-                {
-                    _map.MovePlayerSouth((curr, next) =>
+                        _map.MovePlayerNorth((curr, next) =>
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = curr;
+                            _scrollOutEnd = new Vector2(0, 1080);
+                            _scrollInRoom = next;
+                            _scrollInStart = new Vector2(0, -1080);
+                            _footstepsSound.Play();
+                        });
+                    }
+                    else if (_buttonEast.WasPressed(ref touchState))
                     {
-                        _scrollPos = 0;
-                        _scrollOutRoom = curr;
-                        _scrollOutEnd = new Vector2(0, -1080);
-                        _scrollInRoom = next;
-                        _scrollInStart = new Vector2(0, 1080);
-                        _footstepsSound.Play();
-                    });
-                }
-                else if (_buttonWest.WasPressed(ref touchState))
-                {
-                    _map.MovePlayerWest((curr, next) =>
+                        _map.MovePlayerEast((curr, next) =>
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = curr;
+                            _scrollOutEnd = new Vector2(-1920, 0);
+                            _scrollInRoom = next;
+                            _scrollInStart = new Vector2(1920, 0);
+                            _footstepsSound.Play();
+                        });
+                    }
+                    else if (_buttonSouth.WasPressed(ref touchState))
                     {
-                        _scrollPos = 0;
-                        _scrollOutRoom = curr;
-                        _scrollOutEnd = new Vector2(1920, 0);
-                        _scrollInRoom = next;
-                        _scrollInStart = new Vector2(-1920, 0);
-                        _footstepsSound.Play();
-                    });
+                        _map.MovePlayerSouth((curr, next) =>
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = curr;
+                            _scrollOutEnd = new Vector2(0, -1080);
+                            _scrollInRoom = next;
+                            _scrollInStart = new Vector2(0, 1080);
+                            _footstepsSound.Play();
+                        });
+                    }
+                    else if (_buttonWest.WasPressed(ref touchState))
+                    {
+                        _map.MovePlayerWest((curr, next) =>
+                        {
+                            _scrollPos = 0;
+                            _scrollOutRoom = curr;
+                            _scrollOutEnd = new Vector2(1920, 0);
+                            _scrollInRoom = next;
+                            _scrollInStart = new Vector2(-1920, 0);
+                            _footstepsSound.Play();
+                        });
+                    }
                 }
             }
 
@@ -196,7 +263,7 @@ namespace Wumpus
             // Manage the scroll state.
             if (_scrollOutRoom != -1)
             {
-                if (_scrollPos == 1.0f)
+                if (_scrollPos >= 1.0f)
                 {
                     _scrollOutRoom = -1;
                     _scrollPos = 0;
@@ -204,12 +271,12 @@ namespace Wumpus
             }
             else if (_scrollInRoom != -1)
             {
-                if (_scrollPos == 1.0f)
+                if (_scrollPos >= 1.0f)
                 {
                     _scrollInRoom = -1;
                     OnEnterRoom();
                 }
-            }            
+            }
         }
 
         private void OnEnterRoom()
@@ -311,11 +378,20 @@ namespace Wumpus
                 state.SpriteBatch.Draw(_alienTex, center - half, Color.White);
             }
 
-            if (room.HasTrap && _scrollInRoom == -1)
-            {
-                var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
-                var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
-                state.SpriteBatch.Draw(_trapTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
+            if (_scrollInRoom == -1)
+            { 
+                if (room.HasTrap)
+                {
+                    var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
+                    var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
+                    state.SpriteBatch.Draw(_trapTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
+                }
+                else if (_map.WeaponRoom == room.Index)
+                {
+                    //var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
+                    //var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
+                    state.SpriteBatch.Draw(_flamethrowerTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_flamethrowerTex.Width / 2.0f, _flamethrowerTex.Height / 2.0f), Color.White);
+                }
             }
 
             // Draw the room walls.
@@ -333,16 +409,19 @@ namespace Wumpus
             var room = _map.PlayerRoom;
 
             // Only draw the movement buttons if the scene is not animating.
-            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && !room.HasTrap)
+            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && !room.HasTrap && room.Index != _map.WeaponRoom)
             {
                 if (room.NorthRoom != -1)
-                    _buttonNorth.Draw(state);
+                    (_attackMode ? _attackButtonNorth : _buttonNorth).Draw(state);
                 if (room.EastRoom != -1)
-                    _buttonEast.Draw(state);
+                    (_attackMode ? _attackButtonEast : _buttonEast).Draw(state);
                 if (room.SouthRoom != -1)
-                    _buttonSouth.Draw(state);
+                    (_attackMode ? _attackButtonSouth : _buttonSouth).Draw(state);
                 if (room.WestRoom != -1)
-                    _buttonWest.Draw(state);
+                    (_attackMode ? _attackButtonWest : _buttonWest).Draw(state);
+
+                if (_player.HasWeapon)
+                    _flameThrowerButton.Draw(state);
 
                 if (_map.IsTrapNear(room.Index))
                 {
