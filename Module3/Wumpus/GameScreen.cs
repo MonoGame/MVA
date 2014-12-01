@@ -50,6 +50,7 @@ namespace Wumpus
         private SoundEffectInstance _trapNearSound;
         private SoundEffectInstance _alienNearSound;
         private SoundEffect _deathStingSound;
+        private SoundEffect _playerDeathAlienSound;
         private SoundEffect _famethrowerStingSound;
         private SoundEffect _famethrowerSound;
         private SoundEffectInstance _shipAmbienceSound;
@@ -104,6 +105,7 @@ namespace Wumpus
             _trapNearSound = content.Load<SoundEffect>("sounds/trap_near").CreateInstance();
             _alienNearSound = content.Load<SoundEffect>("sounds/alien-near").CreateInstance();
             _deathStingSound = content.Load<SoundEffect>("sounds/death-sting");
+            _playerDeathAlienSound = content.Load<SoundEffect>("sounds/player-death-alien");
             _famethrowerStingSound = content.Load<SoundEffect>("sounds/flamethrower-pickup");
             _famethrowerSound = content.Load<SoundEffect>("sounds/flamethrower");
             _shipAmbienceSound = content.Load<SoundEffect>("sounds/ship-ambience").CreateInstance();
@@ -363,6 +365,7 @@ namespace Wumpus
             if (_map.AlienRoom == room.Index)
             {
                 _player.Kill();
+                _playerDeathAlienSound.Play();
                 _deathStingSound.Play();
             }
         }

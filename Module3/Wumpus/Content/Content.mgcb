@@ -365,3 +365,9 @@
 /processorParam:Quality=Medium
 /build:sounds/ship-ambience.wav
 
+#begin sounds/player-death-alien.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sounds/player-death-alien.wav
+
