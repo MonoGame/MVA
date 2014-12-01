@@ -52,6 +52,7 @@ namespace Wumpus
         private SoundEffect _deathStingSound;
         private SoundEffect _famethrowerStingSound;
         private SoundEffect _famethrowerSound;
+        private SoundEffectInstance _shipAmbienceSound;
 
         private Button _buttonNorth;
         private Button _buttonEast;
@@ -105,6 +106,7 @@ namespace Wumpus
             _deathStingSound = content.Load<SoundEffect>("sounds/death-sting");
             _famethrowerStingSound = content.Load<SoundEffect>("sounds/flamethrower-pickup");
             _famethrowerSound = content.Load<SoundEffect>("sounds/flamethrower");
+            _shipAmbienceSound = content.Load<SoundEffect>("sounds/ship-ambience").CreateInstance();
 
             { 
                 var buttonNorthTex = content.Load<Texture2D>("ui/button_north");
@@ -210,7 +212,11 @@ namespace Wumpus
                 _alienNearSound.Stop();
 
                 if (_roomTimer > TimeSpan.FromSeconds(5.0f))
+                {
+                    _shipAmbienceSound.Stop();
                     OnGameOver();
+                }
+
                 return;
             }
 
@@ -323,6 +329,12 @@ namespace Wumpus
             _roomTimer = TimeSpan.Zero;
 
             var room = _map.PlayerRoom;
+
+            if (_shipAmbienceSound.State != SoundState.Playing)
+            {
+                _shipAmbienceSound.IsLooped = true;
+                _shipAmbienceSound.Play();
+            }
 
             if (room.HasTrap)
                 _trapHurtSound.Play();

@@ -359,3 +359,9 @@
 /processorParam:Quality=Best
 /build:sounds/flamethrower.wav
 
+#begin sounds/ship-ambience.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Medium
+/build:sounds/ship-ambience.wav
+
