@@ -371,3 +371,9 @@
 /processorParam:Quality=Best
 /build:sounds/player-death-alien.wav
 
+#begin sounds/alien-death.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sounds/alien-death.wav
+

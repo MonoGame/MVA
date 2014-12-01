@@ -54,6 +54,7 @@ namespace Wumpus
         private SoundEffect _famethrowerStingSound;
         private SoundEffect _famethrowerSound;
         private SoundEffectInstance _shipAmbienceSound;
+        private SoundEffect _alienDeathSound;
 
         private Button _buttonNorth;
         private Button _buttonEast;
@@ -62,6 +63,8 @@ namespace Wumpus
 
         private bool _attackMode;
         private TimeSpan _attackTimer;
+        private float _attackRot;
+        private int _attackRoom;
 
         private Button _flameThrowerButton;
         private Button _attackButtonNorth;
@@ -109,6 +112,7 @@ namespace Wumpus
             _famethrowerStingSound = content.Load<SoundEffect>("sounds/flamethrower-pickup");
             _famethrowerSound = content.Load<SoundEffect>("sounds/flamethrower");
             _shipAmbienceSound = content.Load<SoundEffect>("sounds/ship-ambience").CreateInstance();
+            _alienDeathSound = content.Load<SoundEffect>("sounds/alien-death");
 
             { 
                 var buttonNorthTex = content.Load<Texture2D>("ui/button_north");
@@ -189,9 +193,18 @@ namespace Wumpus
                     return;   
                 }
 
+                // Do the attack logic.
                 if (_attackTimer > TimeSpan.Zero)
                 {
                     _attackTimer -= gameTime.ElapsedGameTime;
+
+                    if (_attackTimer < TimeSpan.FromSeconds(3.0f) && _map.AlienRoom == _attackRoom)
+                    {
+                        // Kill the alien!                        
+                        _map.AlienRoom = -1;
+                        _alienDeathSound.Play();
+                        _alienNearSound.Stop();
+                    }
 
                     if (_attackTimer <= TimeSpan.Zero)
                     {
@@ -222,6 +235,19 @@ namespace Wumpus
                 return;
             }
 
+            // If the alien is dead then we win.
+            if (_map.AlienRoom == -1)
+            {
+                _trapNearSound.Stop();
+                _alienNearSound.Stop();
+
+                if (_roomTimer > TimeSpan.FromSeconds(5.0f))
+                {
+                    _shipAmbienceSound.Stop();
+                    OnGameOver();
+                }             
+            }
+
             // Process input only if we're not scrolling.
             if (_scrollOutRoom == -1 && _scrollInRoom == -1)
             {
@@ -233,21 +259,29 @@ namespace Wumpus
                     if (_attackButtonNorth.WasPressed(ref touchState))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _attackRot = MathHelper.TwoPi * 0.25f;
+                        _attackRoom = room.NorthRoom;
                         _famethrowerSound.Play();
                     }
                     else if (_attackButtonEast.WasPressed(ref touchState))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _attackRot = MathHelper.TwoPi * 0.5f;
+                        _attackRoom = room.EastRoom;
                         _famethrowerSound.Play();
                     }
                     else if (_attackButtonSouth.WasPressed(ref touchState))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _attackRot = MathHelper.TwoPi * 0.75f;
+                        _attackRoom = room.SouthRoom;
                         _famethrowerSound.Play();
                     }
                     else if (_attackButtonWest.WasPressed(ref touchState))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _attackRot = MathHelper.TwoPi;
+                        _attackRoom = room.WestRoom;
                         _famethrowerSound.Play();
                     }                    
                 }
@@ -446,6 +480,15 @@ namespace Wumpus
                     //var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
                     state.SpriteBatch.Draw(_flamethrowerTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_flamethrowerTex.Width / 2.0f, _flamethrowerTex.Height / 2.0f), Color.White);
                 }
+            }
+
+            if (_attackTimer > TimeSpan.FromSeconds(1.25f))
+            {
+                var frameN = (int)Math.Floor((_attackTimer.TotalSeconds * 6.0f) % 4.0f);
+                var frame = new Rectangle(0, frameN * (_flamesTex.Height / 4), _flamesTex.Width, _flamesTex.Height / 4);
+                var offset = new Vector2(frame.Right, frame.Height / 2.0f);
+                state.SpriteBatch.Draw(_flamesTex, state.ScreenBounds.Center.ToVector2(),
+                    frame, Color.White, _attackRot, offset, 1, SpriteEffects.None, 0.0f);                
             }
 
             // Draw the room walls.

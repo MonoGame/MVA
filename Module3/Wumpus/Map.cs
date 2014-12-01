@@ -16,7 +16,7 @@ namespace Wumpus
 
         public int Columns { get; private set; }
 
-        public int AlienRoom { get; private set; }
+        public int AlienRoom { get; set; }
 
         public int WeaponRoom { get; set; }
 
