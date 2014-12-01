@@ -353,3 +353,9 @@
 /processorParam:TextureFormat=Color
 /build:flames.png
 
+#begin sounds/flamethrower.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sounds/flamethrower.wav
+

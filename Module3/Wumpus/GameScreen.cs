@@ -11,6 +11,8 @@ namespace Wumpus
     {
         private Map _map;
 
+        private Random _random = new Random();
+
         private Player _player;
 
         private SpriteFont _hudFont;
@@ -49,6 +51,7 @@ namespace Wumpus
         private SoundEffectInstance _alienNearSound;
         private SoundEffect _deathStingSound;
         private SoundEffect _famethrowerStingSound;
+        private SoundEffect _famethrowerSound;
 
         private Button _buttonNorth;
         private Button _buttonEast;
@@ -56,6 +59,7 @@ namespace Wumpus
         private Button _buttonWest;
 
         private bool _attackMode;
+        private TimeSpan _attackTimer;
 
         private Button _flameThrowerButton;
         private Button _attackButtonNorth;
@@ -100,6 +104,7 @@ namespace Wumpus
             _alienNearSound = content.Load<SoundEffect>("sounds/alien-near").CreateInstance();
             _deathStingSound = content.Load<SoundEffect>("sounds/death-sting");
             _famethrowerStingSound = content.Load<SoundEffect>("sounds/flamethrower-pickup");
+            _famethrowerSound = content.Load<SoundEffect>("sounds/flamethrower");
 
             { 
                 var buttonNorthTex = content.Load<Texture2D>("ui/button_north");
@@ -134,6 +139,13 @@ namespace Wumpus
             // Setup the map.
             _map = new Map(Environment.TickCount);            
             OnEnterRoom();
+        }
+
+        private void PlayFootsteps()
+        {
+            var volume = MathHelper.Clamp((float)_random.NextDouble(), 0.4f, 0.8f);
+            var pitch = ((float)_random.NextDouble() - 0.5f) * 0.25f;
+            _footstepsSound.Play(volume, pitch, 0.0f);            
         }
 
         public void Update(GameTime gameTime, TouchCollection touchState)
@@ -172,12 +184,31 @@ namespace Wumpus
 
                     return;   
                 }
+
+                if (_attackTimer > TimeSpan.Zero)
+                {
+                    _attackTimer -= gameTime.ElapsedGameTime;
+
+                    if (_attackTimer <= TimeSpan.Zero)
+                    {
+                        // Remove the weapon from the player and replace 
+                        // it somewhere in the level.
+                        _player.HasWeapon = false;
+                        _map.PlaceWeapon();
+                        _attackMode = false;
+                    }
+
+                    return;
+                }
             }
 
 
             // If the player is dead handle the game over timer.
             if (_player.IsDead)
             {
+                _trapNearSound.Stop();
+                _alienNearSound.Stop();
+
                 if (_roomTimer > TimeSpan.FromSeconds(5.0f))
                     OnGameOver();
                 return;
@@ -193,15 +224,23 @@ namespace Wumpus
                 {
                     if (_attackButtonNorth.WasPressed(ref touchState))
                     {
+                        _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _famethrowerSound.Play();
                     }
                     else if (_attackButtonEast.WasPressed(ref touchState))
                     {
+                        _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _famethrowerSound.Play();
                     }
                     else if (_attackButtonSouth.WasPressed(ref touchState))
                     {
+                        _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _famethrowerSound.Play();
                     }
                     else if (_attackButtonWest.WasPressed(ref touchState))
                     {
+                        _attackTimer = TimeSpan.FromSeconds(5.0f);
+                        _famethrowerSound.Play();
                     }                    
                 }
                 else
@@ -215,7 +254,7 @@ namespace Wumpus
                             _scrollOutEnd = new Vector2(0, 1080);
                             _scrollInRoom = next;
                             _scrollInStart = new Vector2(0, -1080);
-                            _footstepsSound.Play();
+                            PlayFootsteps();
                         });
                     }
                     else if (_buttonEast.WasPressed(ref touchState))
@@ -227,7 +266,7 @@ namespace Wumpus
                             _scrollOutEnd = new Vector2(-1920, 0);
                             _scrollInRoom = next;
                             _scrollInStart = new Vector2(1920, 0);
-                            _footstepsSound.Play();
+                            PlayFootsteps();
                         });
                     }
                     else if (_buttonSouth.WasPressed(ref touchState))
@@ -239,7 +278,7 @@ namespace Wumpus
                             _scrollOutEnd = new Vector2(0, -1080);
                             _scrollInRoom = next;
                             _scrollInStart = new Vector2(0, 1080);
-                            _footstepsSound.Play();
+                            PlayFootsteps();
                         });
                     }
                     else if (_buttonWest.WasPressed(ref touchState))
@@ -251,7 +290,7 @@ namespace Wumpus
                             _scrollOutEnd = new Vector2(1920, 0);
                             _scrollInRoom = next;
                             _scrollInStart = new Vector2(-1920, 0);
-                            _footstepsSound.Play();
+                            PlayFootsteps();
                         });
                     }
                 }
@@ -409,7 +448,7 @@ namespace Wumpus
             var room = _map.PlayerRoom;
 
             // Only draw the movement buttons if the scene is not animating.
-            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && !room.HasTrap && room.Index != _map.WeaponRoom)
+            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && !room.HasTrap && room.Index != _map.WeaponRoom && _attackTimer <= TimeSpan.Zero)
             {
                 if (room.NorthRoom != -1)
                     (_attackMode ? _attackButtonNorth : _buttonNorth).Draw(state);
