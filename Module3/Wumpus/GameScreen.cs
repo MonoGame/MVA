@@ -90,7 +90,7 @@ namespace Wumpus
             _wallWestOpen = content.Load<Texture2D>("wall-west-open");
             _wallWestSolid = content.Load<Texture2D>("wall-west-solid");
 
-            _groundTex = content.Load<Texture2D>("ground");
+            _groundTex = content.Load<Texture2D>("floor");
 
             _goopTex = content.Load<Texture2D>("alien/goop");
             _alienTex = content.Load<Texture2D>("alien/alien");
@@ -419,33 +419,28 @@ namespace Wumpus
             var screen = state.ScreenBounds;
             var center = screen.Center.ToVector2();
             var room = _map.PlayerRoom;
-            var ground = Vector2.Zero;
 
             if (_scrollOutRoom != -1)
             {
                 room = _map[_scrollOutRoom];
                 var offset = Vector2.Lerp(Vector2.Zero, _scrollOutEnd, _scrollPos);
                 center += offset;
-                ground += offset;
             }
             else if (_scrollInRoom != -1)
             {
                 room = _map[_scrollInRoom];
                 var offset = Vector2.Lerp(_scrollInStart, Vector2.Zero, _scrollPos);
                 center += offset;
-                ground += offset;
             }
 
+            state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
+
             // Draw the ground.
-            state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.LinearWrap, null, null, null, state.ScreenXform);
-            state.SpriteBatch.Draw(_groundTex, ground, screen, Color.White);
-            state.SpriteBatch.End();
+            state.SpriteBatch.Draw(_groundTex, center - new Vector2(_groundTex.Width / 2.0f, _groundTex.Height / 2.0f), Color.White);
 
             var roomHalfWidth = _wallNorthSolid.Width / 2.0f;
             var wallDepth = _wallNorthSolid.Height;
             var roomHalfHeight = _wallEastSolid.Height / 2.0f;
-
-            state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
 
             // Is there an alien near by?
             if (_map.IsAlienNear(room.Index))
