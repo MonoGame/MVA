@@ -11,7 +11,7 @@ namespace Wumpus
     {
         private Map _map;
 
-        private Random _random = new Random();
+        private static readonly Random _random = new Random();
 
         private Player _player;
 
@@ -438,8 +438,10 @@ namespace Wumpus
 
             if (_player.IsDead)
                 DrawGameOver(state);
+            if (_map.AlienRoom == -1)
+                DrawGameWin(state);
             else
-                DrawHud(gameTime, state);            
+                DrawHud(gameTime, state);
         }
 
         private void DrawRoom(DrawState state)
@@ -565,6 +567,17 @@ namespace Wumpus
             var size = _gameOverFont.MeasureString(gameOver);
 
             state.SpriteBatch.DrawString(_gameOverFont, gameOver, state.ScreenBounds.Center.ToVector2() - (size / 2), Color.Red);
+            state.SpriteBatch.End();
+        }
+
+        private void DrawGameWin(DrawState state)
+        {
+            state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
+
+            var youWin = "YOU WIN";
+            var size = _gameOverFont.MeasureString(youWin);
+
+            state.SpriteBatch.DrawString(_gameOverFont, youWin, state.ScreenBounds.Center.ToVector2() - (size / 2), Color.Red);
             state.SpriteBatch.End();
         }
     }
