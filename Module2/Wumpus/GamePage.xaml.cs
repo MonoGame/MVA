@@ -10,6 +10,7 @@ namespace Wumpus
     public sealed partial class GamePage : SwapChainBackgroundPanel
     {
         readonly Game1 _game;
+
         public GamePage()
         {
             this.InitializeComponent();

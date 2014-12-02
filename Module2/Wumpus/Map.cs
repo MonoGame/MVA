@@ -6,6 +6,8 @@ namespace Wumpus
 {
     class Map
     {
+        private Random _random;
+
         public delegate void OnPlayerMoved(int currentRoom, int newRoom);
 
         private readonly Room[] _rooms;
@@ -14,9 +16,9 @@ namespace Wumpus
 
         public int Columns { get; private set; }
 
-        public int MonsterRoom { get; private set; }
+        public int AlienRoom { get; set; }
 
-        public int WeaponRoom { get; private set; }
+        public int WeaponRoom { get; set; }
 
         public int PlayerRoomIndex { get; private set; }
 
@@ -41,7 +43,7 @@ namespace Wumpus
         public Map(int seed)
         {
             // Need a random to generate the map.
-            var random = new Random(seed);
+            _random = new Random(seed);
 
             // Create the empty rooms.
             Rows = 10;
@@ -62,21 +64,19 @@ namespace Wumpus
             var trapCount = Rows;
             for (var t = 0; t < trapCount; t++)
             {
-                var i = random.Next(_rooms.Length);
+                var i = _random.Next(_rooms.Length);
                 _rooms[i].HasTrap = true;
             }
 
-            // Randomly place the weapon in a room without a trap.
-            var traplessRooms = _rooms.Where(e => !e.HasTrap).ToArray();
-            WeaponRoom = traplessRooms[random.Next(traplessRooms.Length)].Index;
+            PlaceWeapon();
           
             // Randomly place the monster in a room without traps or a weapon.
             var monsterRooms = _rooms.Where(e => !e.HasTrap && e.Index != WeaponRoom).ToArray();
-            MonsterRoom = monsterRooms[random.Next(monsterRooms.Length)].Index;
+            AlienRoom = monsterRooms[_random.Next(monsterRooms.Length)].Index;
 
             // Pick a random location for the player.
-            var startRooms = _rooms.Where(e => !e.HasTrap && e.Index != WeaponRoom && e.Index != MonsterRoom).ToArray();
-            PlayerRoomIndex = startRooms[random.Next(startRooms.Length)].Index;
+            var startRooms = _rooms.Where(e => !e.HasTrap && e.Index != WeaponRoom && e.Index != AlienRoom).ToArray();
+            PlayerRoomIndex = startRooms[_random.Next(startRooms.Length)].Index;
         }
 
         public void MovePlayerNorth(OnPlayerMoved callback)
@@ -117,6 +117,13 @@ namespace Wumpus
                 callback(PlayerRoomIndex, room.WestRoom);
                 PlayerRoomIndex = room.WestRoom;
             }
+        }
+
+        public void PlaceWeapon()
+        {
+            // Randomly place the weapon in a room without a trap, alien, or player.
+            var traplessRooms = _rooms.Where(e => !e.HasTrap && e.Index != PlayerRoomIndex && e.Index != AlienRoom).ToArray();
+            WeaponRoom = traplessRooms[_random.Next(traplessRooms.Length)].Index;
         }
     }
 }
