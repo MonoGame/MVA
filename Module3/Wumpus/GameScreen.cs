@@ -461,20 +461,18 @@ namespace Wumpus
                 state.SpriteBatch.Draw(_alienTex, center - half, Color.White);
             }
 
-            if (_scrollInRoom == -1)
-            { 
-                if (room.HasTrap)
-                {
-                    var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
-                    var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
-                    state.SpriteBatch.Draw(_trapTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
-                }
-                else if (_map.WeaponRoom == room.Index)
-                {
-                    //var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
-                    //var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
-                    state.SpriteBatch.Draw(_flamethrowerTex, state.ScreenBounds.Center.ToVector2() - new Vector2(_flamethrowerTex.Width / 2.0f, _flamethrowerTex.Height / 2.0f), Color.White);
-                }
+            if (room.HasTrap)
+            {
+                var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
+                var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
+                state.SpriteBatch.Draw(_trapTex, center - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
+            }
+            
+            if (_map.WeaponRoom == room.Index)
+            {
+                //var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
+                //var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
+                state.SpriteBatch.Draw(_flamethrowerTex, center - new Vector2(_flamethrowerTex.Width / 2.0f, _flamethrowerTex.Height / 2.0f), Color.White);
             }
 
             if (_attackTimer > TimeSpan.FromSeconds(1.25f))
