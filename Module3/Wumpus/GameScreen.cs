@@ -36,6 +36,8 @@ namespace Wumpus
         private Texture2D _groundTex;
 
         private Texture2D _goopTex;
+        private Vector3? _goopPos;
+
         private Texture2D _alienTex;
 
         private Texture2D _trapTex;
@@ -156,6 +158,16 @@ namespace Wumpus
             _footstepsSound.Play(volume, pitch, 0.0f);            
         }
 
+        private bool ShowHud()
+        {
+            return  _scrollInRoom == -1 && 
+                    _scrollOutRoom == -1 && 
+                    !_map.PlayerRoom.HasTrap && 
+                    _map.PlayerRoom.Index != _map.WeaponRoom && 
+                    _attackTimer <= TimeSpan.Zero &&
+                    _map.AlienRoom != -1;
+        }
+
         public void Update(GameTime gameTime, TouchCollection touchState)
         {
             _roomTimer += gameTime.ElapsedGameTime;
@@ -202,6 +214,7 @@ namespace Wumpus
                     {
                         // Kill the alien!                        
                         _map.AlienRoom = -1;
+                        _roomTimer = TimeSpan.Zero;
                         _alienDeathSound.Play();
                         _alienNearSound.Stop();
                     }
@@ -248,8 +261,7 @@ namespace Wumpus
                 }             
             }
 
-            // Process input only if we're not scrolling.
-            if (_scrollOutRoom == -1 && _scrollInRoom == -1)
+            if (ShowHud())
             {
                 if (_player.HasWeapon && _flameThrowerButton.WasPressed(ref touchState))
                     _attackMode = !_attackMode;
@@ -345,23 +357,39 @@ namespace Wumpus
             if (_scrollOutRoom != -1)
             {
                 if (_scrollPos >= 1.0f)
-                {
-                    _scrollOutRoom = -1;
-                    _scrollPos = 0;
-                }
+                    OnEnteringRoom();
             }
             else if (_scrollInRoom != -1)
             {
                 if (_scrollPos >= 1.0f)
-                {
-                    _scrollInRoom = -1;
                     OnEnterRoom();
-                }
+            }
+        }
+
+        private void OnEnteringRoom()
+        {
+            _scrollOutRoom = -1;
+            _scrollPos = 0;
+
+            if (!_map.IsAlienNear(_scrollInRoom))
+                _goopPos = null;
+            else
+            {
+                // Pick a random position and rotation for goop
+                // texture within the room.
+                var random = new Random(_scrollInRoom);
+                var posX = ((float)random.NextDouble() - 0.5f) * _wallNorthSolid.Width * 0.6f;
+                var posY = ((float)random.NextDouble() - 0.5f) * _wallEastSolid.Height * 0.6f;
+                var rot = (float)random.NextDouble() * MathHelper.TwoPi;
+                _goopPos = new Vector3(posX, posY, rot);
             }
         }
 
         private void OnEnterRoom()
         {
+            _scrollInRoom = -1;
+            _scrollPos = 0;
+
             _roomTimer = TimeSpan.Zero;
 
             var room = _map.PlayerRoom;
@@ -388,13 +416,13 @@ namespace Wumpus
                 _famethrowerStingSound.Play();
             }
 
-            if (_map.IsAlienNear(room.Index))
+            if (!_map.IsAlienNear(room.Index))
+                _alienNearSound.Stop();
+            else
             {
                 _alienNearSound.IsLooped = true;
                 _alienNearSound.Play();
             }
-            else
-                _alienNearSound.Stop();
 
             if (_map.AlienRoom == room.Index)
             {
@@ -442,21 +470,16 @@ namespace Wumpus
             var wallDepth = _wallNorthSolid.Height;
             var roomHalfHeight = _wallEastSolid.Height / 2.0f;
 
-            // Is there an alien near by?
-            if (_map.IsAlienNear(room.Index))
+            // Do we draw the alien goop?
+            if (_goopPos.HasValue)
             {
-                // Randomly place some goop on the ground.
-                var random = new Random(room.Index);
-                var posX = ((float)random.NextDouble() - 0.5f) * _wallNorthSolid.Width * 0.6f;
-                var posY = ((float)random.NextDouble() - 0.5f) * _wallEastSolid.Height * 0.6f;
-                var rot = (float)random.NextDouble() * MathHelper.TwoPi;
                 var half = new Vector2(_goopTex.Width / 2.0f, _goopTex.Height / 2.0f);
-
-                state.SpriteBatch.Draw(_goopTex, center + new Vector2(posX, posY) - half, null, null, half, rot);
+                state.SpriteBatch.Draw(_goopTex, center + new Vector2(_goopPos.Value.X, _goopPos.Value.Y), null, null, half, _goopPos.Value.Z);
             }
-            else if (_map.AlienRoom == room.Index)
-            {
-                // Draw the alien.
+
+            // Do we draw the alien.
+            if (_map.AlienRoom == room.Index)
+            {                
                 var half = new Vector2(_alienTex.Width / 2.0f, _alienTex.Height / 2.0f);
                 state.SpriteBatch.Draw(_alienTex, center - half, Color.White);
             }
@@ -470,8 +493,6 @@ namespace Wumpus
             
             if (_map.WeaponRoom == room.Index)
             {
-                //var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
-                //var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
                 state.SpriteBatch.Draw(_flamethrowerTex, center - new Vector2(_flamethrowerTex.Width / 2.0f, _flamethrowerTex.Height / 2.0f), Color.White);
             }
 
@@ -498,8 +519,7 @@ namespace Wumpus
 
             var room = _map.PlayerRoom;
 
-            // Only draw the movement buttons if the scene is not animating.
-            if (_scrollInRoom == -1 && _scrollOutRoom == -1 && !room.HasTrap && room.Index != _map.WeaponRoom && _attackTimer <= TimeSpan.Zero)
+            if (ShowHud())
             {
                 if (room.NorthRoom != -1)
                     (_attackMode ? _attackButtonNorth : _buttonNorth).Draw(state);
