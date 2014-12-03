@@ -516,7 +516,7 @@ namespace Wumpus
                 if (_map.IsTrapNear(room.Index))
                 {
                     var frameN = (int) Math.Floor(_roomTimer.TotalSeconds % 2.0f);
-                    var frame = new Rectangle(frameN * _trapWarnTex.Height, 0, _trapWarnTex.Height, _trapWarnTex.Height);
+                    var frame = new Rectangle(frameN * _trapWarnTex.Width, 0, _trapWarnTex.Width, _trapWarnTex.Height);
                     state.SpriteBatch.Draw(_trapWarnTex, new Vector2(state.ScreenBounds.Left, state.ScreenBounds.Bottom - _trapWarnTex.Height), frame, Color.White);
                     //state.SpriteBatch.DrawString(_hudFont, "You hear ticking!", new Vector2(20, 108), Color.White);
                 }
