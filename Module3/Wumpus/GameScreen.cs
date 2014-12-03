@@ -460,13 +460,13 @@ namespace Wumpus
             if (_scrollOutRoom != -1)
             {
                 room = _map[_scrollOutRoom];
-                var offset = Vector2.Lerp(Vector2.Zero, _scrollOutEnd, _scrollPos);
+                var offset = Vector2.Lerp(Vector2.Zero, _scrollOutEnd, Helpers.EaseInOut(_scrollPos));
                 center += offset;
             }
             else if (_scrollInRoom != -1)
             {
                 room = _map[_scrollInRoom];
-                var offset = Vector2.Lerp(_scrollInStart, Vector2.Zero, _scrollPos);
+                var offset = Vector2.Lerp(_scrollInStart, Vector2.Zero, Helpers.EaseInOut(_scrollPos));
                 center += offset;
             }
 
