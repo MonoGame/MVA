@@ -52,7 +52,7 @@ namespace Wumpus
             Window.Current.Activate();
 
             // Hide the status bar.
-            StatusBar.GetForCurrentView().HideAsync();
+            StatusBar.GetForCurrentView().HideAsync().GetResults();
         }
 
         /// <summary>
