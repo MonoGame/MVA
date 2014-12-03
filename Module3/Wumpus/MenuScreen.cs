@@ -17,14 +17,20 @@ namespace Wumpus
 
         private readonly Song _song;
 
+        private readonly Texture2D _titleTex;
+
         public MenuScreen(ContentManager content, Rectangle screenBounds)
         {
             _menuFont = content.Load<SpriteFont>("GameOver");
 
+            _titleTex = content.Load<Texture2D>("ui/title_screen");
+
             _song = content.Load<Song>("music/Blown Away - Menu");
 
             var center = screenBounds.Center;
-            _startButton = new Button(_menuFont, "Start", center.X, center.Y + 100);
+            var startTex = content.Load<Texture2D>("ui/start");
+
+            _startButton = new Button(startTex, center.X - (startTex.Width / 2), center.Y + 200);
         }
 
         public void Update(GameTime gameTime, TouchCollection touchState)
@@ -43,14 +49,14 @@ namespace Wumpus
             var center = state.ScreenBounds.Center;
 
             // Draw the title.
-            const string title = "ALIEN HUNTER";
-            var titleSize = _menuFont.MeasureString(title);
-            state.SpriteBatch.DrawString(_menuFont, title, new Vector2(center.X - (titleSize.X / 2.0f), center.Y - titleSize.Y - 100), Color.White);
+            state.SpriteBatch.Draw(_titleTex, new Vector2(center.X - (_titleTex.Width / 2.0f), center.Y - (_titleTex.Height / 2.0f)), Color.White);
 
-            // Draw the buttons.
-            _startButton.Draw(state);
+            // Draw the start button blinking.
+            if ((gameTime.TotalGameTime.TotalSeconds % 0.9f) > 0.45f)
+                _startButton.Draw(state);
 
             state.SpriteBatch.End();
         }
     }
 }
+
