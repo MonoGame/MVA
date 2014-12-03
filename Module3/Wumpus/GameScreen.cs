@@ -157,6 +157,13 @@ namespace Wumpus
             OnEnterRoom();
         }
 
+        public void Cleanup()
+        {
+            _shipAmbienceSound.Stop();
+            _trapNearSound.Stop();
+            _alienNearSound.Stop();
+        }
+
         private void PlayFootsteps()
         {
             var volume = MathHelper.Clamp((float)_random.NextDouble(), 0.4f, 0.8f);
@@ -247,10 +254,7 @@ namespace Wumpus
                 _alienNearSound.Stop();
 
                 if (_roomTimer > TimeSpan.FromSeconds(5.0f))
-                {
-                    _shipAmbienceSound.Stop();
                     OnGameOver();
-                }
 
                 return;
             }
@@ -262,10 +266,7 @@ namespace Wumpus
                 _alienNearSound.Stop();
 
                 if (_roomTimer > TimeSpan.FromSeconds(5.0f))
-                {
-                    _shipAmbienceSound.Stop();
-                    OnGameOver();
-                }             
+                    OnGameOver();        
             }
 
             if (ShowHud())
@@ -420,9 +421,7 @@ namespace Wumpus
                 _trapNearSound.Stop();
 
             if (_map.WeaponRoom == room.Index)
-            {
                 _famethrowerStingSound.Play();
-            }
 
             if (!_map.IsAlienNear(room.Index))
                 _alienNearSound.Stop();
@@ -474,7 +473,7 @@ namespace Wumpus
             state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
 
             // Draw the ground.
-            state.SpriteBatch.Draw(_groundTex, center - new Vector2(_groundTex.Width / 2.0f, _groundTex.Height / 2.0f), Color.White);
+            state.SpriteBatch.Draw(_groundTex, center - _groundTex.GetHalfSize(), Color.White);
 
             var roomHalfWidth = _wallNorthSolid.Width / 2.0f;
             var wallDepth = _wallNorthSolid.Height;
@@ -482,29 +481,22 @@ namespace Wumpus
 
             // Do we draw the alien goop?
             if (_goopPos.HasValue)
-            {
-                var half = new Vector2(_goopTex.Width / 2.0f, _goopTex.Height / 2.0f);
-                state.SpriteBatch.Draw(_goopTex, center + new Vector2(_goopPos.Value.X, _goopPos.Value.Y), null, null, half, _goopPos.Value.Z);
-            }
+                state.SpriteBatch.Draw(_goopTex, center + new Vector2(_goopPos.Value.X, _goopPos.Value.Y), null, null, _goopTex.GetHalfSize(), _goopPos.Value.Z);
 
             // Do we draw the alien.
             if (_map.AlienRoom == room.Index)
-            {                
-                var half = new Vector2(_alienTex.Width / 2.0f, _alienTex.Height / 2.0f);
-                state.SpriteBatch.Draw(_alienTex, center - half, Color.White);
-            }
-
+                state.SpriteBatch.Draw(_alienTex, center - _alienTex.GetHalfSize(), Color.White);
+ 
             if (room.HasTrap)
             {
                 var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.2f) * 8), 0, 7);
-                var frame = new Rectangle(frameN * (_trapTex.Width / 8), 0, (_trapTex.Width / 8), _trapTex.Height);
-                state.SpriteBatch.Draw(_trapTex, center - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
+                var frameWidth = _trapTex.Width / 8;
+                var frame = new Rectangle(frameN * frameWidth, 0, frameWidth, _trapTex.Height);
+                state.SpriteBatch.Draw(_trapTex, center - new Vector2(frameWidth / 2.0f, _trapTex.Height / 2.0f), frame, Color.White);
             }
             
             if (_map.WeaponRoom == room.Index)
-            {
-                state.SpriteBatch.Draw(_flamethrowerTex, center - new Vector2(_flamethrowerTex.Width / 2.0f, _flamethrowerTex.Height / 2.0f), Color.White);
-            }
+                state.SpriteBatch.Draw(_flamethrowerTex, center - _flamethrowerTex.GetHalfSize(), Color.White);
 
             if (_attackTimer > TimeSpan.FromSeconds(1.25f))
             {

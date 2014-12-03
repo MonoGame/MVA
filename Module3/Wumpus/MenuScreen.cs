@@ -46,10 +46,10 @@ namespace Wumpus
         {
             state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
 
-            var center = state.ScreenBounds.Center;
+            var center = state.ScreenBounds.Center.ToVector2();
 
             // Draw the title.
-            state.SpriteBatch.Draw(_titleTex, new Vector2(center.X - (_titleTex.Width / 2.0f), center.Y - (_titleTex.Height / 2.0f)), Color.White);
+            state.SpriteBatch.Draw(_titleTex, center - _titleTex.GetHalfSize(), Color.White);
 
             // Draw the start button blinking.
             if ((gameTime.TotalGameTime.TotalSeconds % 0.9f) > 0.45f)

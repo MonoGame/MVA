@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input.Touch;
 using Microsoft.Xna.Framework.Media;
+using Windows.UI.Popups;
 
 namespace Wumpus
 {
@@ -36,13 +37,16 @@ namespace Wumpus
             else
             {
                 e.Handled = true;
-                /*
-                var dlg = new MessageDialog("Are you sure you want to quit the game?");
-                dlg.Commands.Add(new UICommand("Yes", command => e.Handled = false));
-                dlg.Commands.Add(new UICommand("No", command => e.Handled = true));
+
+                var dlg = new MessageDialog("Are you sure you want to quit the game?", "Quit?");
+                dlg.Commands.Add(new UICommand("Yes", command => 
+                    {
+                        _gameScreen.Cleanup();
+                        _gameScreen = null;
+                    }));
+                dlg.Commands.Add(new UICommand("No"));
                 dlg.CancelCommandIndex = 1;
                 dlg.ShowAsync();
-                */
             }
         }
 
@@ -72,13 +76,19 @@ namespace Wumpus
             _drawState = new DrawState(GraphicsDevice);
 
             _menuScreen = new MenuScreen(Content, _drawState.ScreenBounds);
-            _menuScreen.OnStart += () =>
-            {
-                if (MediaPlayer.GameHasControl)
-                    MediaPlayer.Stop();
+            _menuScreen.OnStart += OnGameStart;
+        }
 
-                _gameScreen = new GameScreen(Content, _drawState.ScreenBounds);
-                _gameScreen.OnGameOver += () => _gameScreen = null;
+        protected void OnGameStart()
+        {
+            if (MediaPlayer.GameHasControl)
+                MediaPlayer.Stop();
+
+            _gameScreen = new GameScreen(Content, _drawState.ScreenBounds);
+            _gameScreen.OnGameOver += () =>
+            {
+                _gameScreen.Cleanup();
+                _gameScreen = null;
             };
         }
 
