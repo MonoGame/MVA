@@ -30,8 +30,6 @@ namespace Wumpus
 
         private Texture2D _groundTex;
 
-        private Texture2D _playerTex;
-
         private Button _buttonNorth;
         private Button _buttonEast;
         private Button _buttonSouth;
@@ -95,8 +93,6 @@ namespace Wumpus
 
             _groundTex = Content.Load<Texture2D>("ground");
 
-            _playerTex = Content.Load<Texture2D>("player");
-
             var buttonNorthTex = Content.Load<Texture2D>("ui/button_north");
             var buttonEastTex = Content.Load<Texture2D>("ui/button_east");
             var buttonSouthTex = Content.Load<Texture2D>("ui/button_south");
@@ -108,7 +104,7 @@ namespace Wumpus
             _buttonWest = new Button(buttonWestTex, _screenBounds.Center.X - (_wallNorthSolid.Width / 2), _screenBounds.Center.Y - (buttonWestTex.Height / 2));
 
             // Setup the map.
-            _map = new Map(Environment.TickCount);
+            _map = new Map(Environment.TickCount);            
         }
 
         /// <summary>
