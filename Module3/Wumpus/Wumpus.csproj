@@ -88,6 +88,7 @@
     </Compile>
     <Compile Include="Button.cs" />
     <Compile Include="DrawState.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="GamePage.xaml.cs">
       <DependentUpon>GamePage.xaml</DependentUpon>

@@ -47,6 +47,9 @@ namespace Wumpus
         private Texture2D _flamethrowerTex;
         private Texture2D _flamesTex;
 
+        private Texture2D _gameLossTex;
+        private Texture2D _gameWinTex;
+
         private SoundEffect _footstepsSound;
         private SoundEffect _trapHurtSound;
         private SoundEffectInstance _trapNearSound;
@@ -104,6 +107,9 @@ namespace Wumpus
 
             _flamethrowerTex = content.Load<Texture2D>("flamethrower");
             _flamesTex = content.Load<Texture2D>("flames");
+
+            _gameLossTex = content.Load<Texture2D>("ui/text_gameover");
+            _gameWinTex = content.Load<Texture2D>("ui/text_alienterminated");
 
             _footstepsSound = content.Load<SoundEffect>("sounds/footsteps");
             _trapHurtSound = content.Load<SoundEffect>("sounds/trap_hurt");
@@ -563,22 +569,14 @@ namespace Wumpus
         private void DrawGameOver(DrawState state)
         {
             state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
-
-            var gameOver = "GAME OVER";
-            var size = _gameOverFont.MeasureString(gameOver);
-
-            state.SpriteBatch.DrawString(_gameOverFont, gameOver, state.ScreenBounds.Center.ToVector2() - (size / 2), Color.Red);
+            state.SpriteBatch.Draw(_gameLossTex, state.ScreenBounds.Center.ToVector2() - _gameLossTex.GetHalfSize(), Color.Red);
             state.SpriteBatch.End();
         }
 
         private void DrawGameWin(DrawState state)
         {
             state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
-
-            var youWin = "YOU WIN";
-            var size = _gameOverFont.MeasureString(youWin);
-
-            state.SpriteBatch.DrawString(_gameOverFont, youWin, state.ScreenBounds.Center.ToVector2() - (size / 2), Color.Red);
+            state.SpriteBatch.Draw(_gameWinTex, state.ScreenBounds.Center.ToVector2() - _gameWinTex.GetHalfSize(), Color.Red);
             state.SpriteBatch.End();
         }
     }
