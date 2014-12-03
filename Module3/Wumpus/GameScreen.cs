@@ -160,12 +160,13 @@ namespace Wumpus
 
         private bool ShowHud()
         {
-            return  _scrollInRoom == -1 && 
-                    _scrollOutRoom == -1 && 
-                    !_map.PlayerRoom.HasTrap && 
-                    _map.PlayerRoom.Index != _map.WeaponRoom && 
+            return _scrollInRoom == -1 &&
+                    _scrollOutRoom == -1 &&
+                    !_map.PlayerRoom.HasTrap &&
+                    _map.PlayerRoom.Index != _map.WeaponRoom &&
                     _attackTimer <= TimeSpan.Zero &&
-                    _map.AlienRoom != -1;
+                    _map.AlienRoom != -1 &&
+                    !_player.IsDead;
         }
 
         public void Update(GameTime gameTime, TouchCollection touchState)
@@ -361,6 +362,7 @@ namespace Wumpus
             }
             else if (_scrollInRoom != -1)
             {
+                _roomTimer = TimeSpan.Zero;
                 if (_scrollPos >= 1.0f)
                     OnEnterRoom();
             }
@@ -488,8 +490,8 @@ namespace Wumpus
 
             if (room.HasTrap)
             {
-                var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.5f) * 8), 0, 7);
-                var frame = new Rectangle(frameN * _trapTex.Height, 0, _trapTex.Height, _trapTex.Height);
+                var frameN = MathHelper.Clamp((int)Math.Floor((_roomTimer.TotalSeconds / 1.2f) * 8), 0, 7);
+                var frame = new Rectangle(frameN * (_trapTex.Width / 8), 0, (_trapTex.Width / 8), _trapTex.Height);
                 state.SpriteBatch.Draw(_trapTex, center - new Vector2(_trapTex.Height / 2.0f), frame, Color.White);
             }
             
@@ -538,9 +540,8 @@ namespace Wumpus
                 if (_map.IsTrapNear(room.Index))
                 {
                     var frameN = (int) Math.Floor(_roomTimer.TotalSeconds % 2.0f);
-                    var frame = new Rectangle(frameN * _trapWarnTex.Width, 0, _trapWarnTex.Width, _trapWarnTex.Height);
+                    var frame = new Rectangle(frameN * (_trapWarnTex.Width / 2), 0, _trapWarnTex.Width / 2, _trapWarnTex.Height);
                     state.SpriteBatch.Draw(_trapWarnTex, new Vector2(state.ScreenBounds.Left, state.ScreenBounds.Bottom - _trapWarnTex.Height), frame, Color.White);
-                    //state.SpriteBatch.DrawString(_hudFont, "You hear ticking!", new Vector2(20, 108), Color.White);
                 }
             }
 
