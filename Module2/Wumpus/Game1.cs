@@ -233,7 +233,7 @@ namespace Wumpus
             }            
 
             // Draw the ground.
-            _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.LinearWrap, null, null, null, _screenXform);
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
             _spriteBatch.Draw(_groundTex, ground, screen, Color.White);
             _spriteBatch.End();
 
