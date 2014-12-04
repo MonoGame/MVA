@@ -16,7 +16,6 @@ namespace Wumpus
         private Player _player;
 
         private SpriteFont _hudFont;
-        private SpriteFont _gameOverFont;
 
         private float _scrollPos;
         private int _scrollOutRoom = -1;
@@ -84,7 +83,6 @@ namespace Wumpus
         public GameScreen(ContentManager content, Rectangle screenBounds)
         {
             _hudFont = content.Load<SpriteFont>("Segoe24");
-            _gameOverFont = content.Load<SpriteFont>("GameOver");
 
             _wallNorthOpen = content.Load<Texture2D>("wall-north-open");
             _wallNorthSolid = content.Load<Texture2D>("wall-north-solid");
@@ -537,9 +535,8 @@ namespace Wumpus
 
                 if (_map.IsTrapNear(room.Index))
                 {
-                    var frameN = (int) Math.Floor(_roomTimer.TotalSeconds % 2.0f);
-                    var frame = new Rectangle(frameN * (_trapWarnTex.Width / 2), 0, _trapWarnTex.Width / 2, _trapWarnTex.Height);
-                    state.SpriteBatch.Draw(_trapWarnTex, new Vector2(state.ScreenBounds.Left, state.ScreenBounds.Bottom - _trapWarnTex.Height), frame, Color.White);
+                    if (_roomTimer.TotalSeconds % 2.0f < 1.0f)
+                        state.SpriteBatch.Draw(_trapWarnTex, new Vector2(state.ScreenBounds.Left, state.ScreenBounds.Bottom - _trapWarnTex.Height), Color.White);
                 }
             }
 

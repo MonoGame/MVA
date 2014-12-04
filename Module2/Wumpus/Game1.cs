@@ -91,7 +91,7 @@ namespace Wumpus
             _wallWestOpen = Content.Load<Texture2D>("wall-west-open");
             _wallWestSolid = Content.Load<Texture2D>("wall-west-solid");
 
-            _groundTex = Content.Load<Texture2D>("ground");
+            _groundTex = Content.Load<Texture2D>("floor");
 
             var buttonNorthTex = Content.Load<Texture2D>("ui/button_north");
             var buttonEastTex = Content.Load<Texture2D>("ui/button_east");
@@ -215,34 +215,30 @@ namespace Wumpus
             var screen = _screenBounds;
             var center = screen.Center.ToVector2();
             var room = _map.PlayerRoom;
-            var ground = Vector2.Zero;
 
             if (_scrollOutRoom != -1)
             {
                 room = _map[_scrollOutRoom];
-                var offset = Vector2.Lerp(Vector2.Zero, _scrollOutEnd, _scrollPos);
+                var offset = Vector2.Lerp(Vector2.Zero, _scrollOutEnd, Helpers.EaseInOut(_scrollPos));
                 center += offset;
-                ground += offset;
             }
             else if (_scrollInRoom != -1)
             {
                 room = _map[_scrollInRoom];
-                var offset = Vector2.Lerp(_scrollInStart, Vector2.Zero, _scrollPos);
+                var offset = Vector2.Lerp(_scrollInStart, Vector2.Zero, Helpers.EaseInOut(_scrollPos));
                 center += offset;
-                ground += offset;
-            }            
+            }
+
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
 
             // Draw the ground.
-            _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
-            _spriteBatch.Draw(_groundTex, ground, screen, Color.White);
-            _spriteBatch.End();
+            _spriteBatch.Draw(_groundTex, center - new Vector2(_groundTex.Width / 2, _groundTex.Height / 2), Color.White);
 
             var roomHalfWidth = _wallNorthSolid.Width / 2.0f;
             var wallDepth = _wallNorthSolid.Height;
             var roomHalfHeight = _wallEastSolid.Height / 2.0f;
 
             // Draw the room walls.
-            _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenXform);
             _spriteBatch.Draw(room.NorthRoom != -1 ? _wallNorthOpen : _wallNorthSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
             _spriteBatch.Draw(room.EastRoom != -1 ? _wallEastOpen : _wallEastSolid, new Vector2(center.X + roomHalfWidth - wallDepth, center.Y - roomHalfHeight));
             _spriteBatch.Draw(room.WestRoom != -1 ? _wallWestOpen : _wallWestSolid, new Vector2(center.X - roomHalfWidth, center.Y - roomHalfHeight));
@@ -256,9 +252,6 @@ namespace Wumpus
 
             var room = _map.PlayerRoom;
 
-            var roomDesc = string.Format("ROOM: {0}", room.Index + 1);
-            _spriteBatch.DrawString(_hudFont, roomDesc, new Vector2(20, 10), Color.White);
-
             // Only draw the movement buttons if the scene is not animating.
             if (_scrollInRoom == -1 && _scrollOutRoom == -1)
             {
@@ -271,6 +264,11 @@ namespace Wumpus
                 if (room.WestRoom != -1)
                     _buttonWest.Draw(_spriteBatch);
             }
+
+
+            // Draw the room identifier.
+            var roomDesc = string.Format("ROOM: {0}", room.Index + 1);
+            _spriteBatch.DrawString(_hudFont, roomDesc, new Vector2(20, 10), Color.White);
 
             _spriteBatch.End();
         }

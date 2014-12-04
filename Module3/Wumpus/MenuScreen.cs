@@ -11,19 +11,18 @@ namespace Wumpus
     {
         public event Action OnStart;
 
-        private readonly SpriteFont _menuFont;
-
         private readonly Button _startButton;
 
         private readonly Song _song;
+
+        private readonly Texture2D _backgroundTex;
 
         private readonly Texture2D _titleTex;
 
         public MenuScreen(ContentManager content, Rectangle screenBounds)
         {
-            _menuFont = content.Load<SpriteFont>("GameOver");
-
-            _titleTex = content.Load<Texture2D>("ui/title_screen");
+            _backgroundTex = content.Load<Texture2D>("ui/title_screen");
+            _titleTex = content.Load<Texture2D>("ui/title_text");
 
             _song = content.Load<Song>("music/Blown Away - Menu");
 
@@ -48,7 +47,8 @@ namespace Wumpus
 
             var center = state.ScreenBounds.Center.ToVector2();
 
-            // Draw the title.
+            // Draw the background and title.
+            state.SpriteBatch.Draw(_backgroundTex, center - _backgroundTex.GetHalfSize(), Color.White);
             state.SpriteBatch.Draw(_titleTex, center - _titleTex.GetHalfSize(), Color.White);
 
             // Draw the start button blinking.
