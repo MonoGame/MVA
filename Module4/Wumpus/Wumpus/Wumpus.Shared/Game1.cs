@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input.Touch;
 using Microsoft.Xna.Framework.Media;
 using Windows.UI.Popups;
+using Microsoft.Xna.Framework.Input;
 
 namespace Wumpus
 {
@@ -69,6 +70,10 @@ namespace Wumpus
             // automatically scale the touch input.
             TouchPanel.DisplayWidth = _drawState.ScreenBounds.Width;
             TouchPanel.DisplayHeight = _drawState.ScreenBounds.Height;
+
+#if !WINDOWS_PHONE_APP
+            IsMouseVisible = true;
+#endif
         }
 
         /// <summary>

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input.Touch;
+using Microsoft.Xna.Framework.Input;
 
 namespace Wumpus
 {
@@ -182,8 +183,14 @@ namespace Wumpus
                     !_player.IsDead;
         }
 
+        KeyboardState lastKeyboardState;
+        GamePadState lastGamePadState;
+
         public void Update(GameTime gameTime, TouchCollection touchState)
         {
+            var keyboardState = Keyboard.GetState();
+            var gamePadState  = GamePad.GetState(PlayerIndex.One);
+
             _roomTimer += gameTime.ElapsedGameTime;
             var room = _map.PlayerRoom;
 
@@ -276,28 +283,32 @@ namespace Wumpus
 
                 if (_attackMode)
                 {
-                    if (_attackButtonNorth.WasPressed(ref touchState))
+                    if (_attackButtonNorth.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Up) && keyboardState.IsKeyDown(Keys.Up))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadUp) && gamePadState.IsButtonDown(Buttons.DPadUp)))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
                         _attackRot = MathHelper.TwoPi * 0.25f;
                         _attackRoom = room.NorthRoom;
                         _famethrowerSound.Play();
                     }
-                    else if (_attackButtonEast.WasPressed(ref touchState))
+                    else if (_attackButtonEast.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Right) && keyboardState.IsKeyDown(Keys.Right))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadRight) && gamePadState.IsButtonDown(Buttons.DPadRight)))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
                         _attackRot = MathHelper.TwoPi * 0.5f;
                         _attackRoom = room.EastRoom;
                         _famethrowerSound.Play();
                     }
-                    else if (_attackButtonSouth.WasPressed(ref touchState))
+                    else if (_attackButtonSouth.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Down) && keyboardState.IsKeyDown(Keys.Down))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadDown) && gamePadState.IsButtonDown(Buttons.DPadDown)))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
                         _attackRot = MathHelper.TwoPi * 0.75f;
                         _attackRoom = room.SouthRoom;
                         _famethrowerSound.Play();
                     }
-                    else if (_attackButtonWest.WasPressed(ref touchState))
+                    else if (_attackButtonWest.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Left) && keyboardState.IsKeyDown(Keys.Left))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadLeft) && gamePadState.IsButtonDown(Buttons.DPadLeft)))
                     {
                         _attackTimer = TimeSpan.FromSeconds(5.0f);
                         _attackRot = MathHelper.TwoPi;
@@ -306,8 +317,9 @@ namespace Wumpus
                     }                    
                 }
                 else
-                { 
-                    if (_buttonNorth.WasPressed(ref touchState))
+                {
+                    if (_buttonNorth.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Up) && keyboardState.IsKeyDown(Keys.Up))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadUp) && gamePadState.IsButtonDown(Buttons.DPadUp)))
                     {
                         _map.MovePlayerNorth((curr, next) =>
                         {
@@ -319,7 +331,8 @@ namespace Wumpus
                             PlayFootsteps();
                         });
                     }
-                    else if (_buttonEast.WasPressed(ref touchState))
+                    else if (_buttonEast.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Right) && keyboardState.IsKeyDown(Keys.Right))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadRight) && gamePadState.IsButtonDown(Buttons.DPadRight)))
                     {
                         _map.MovePlayerEast((curr, next) =>
                         {
@@ -331,7 +344,8 @@ namespace Wumpus
                             PlayFootsteps();
                         });
                     }
-                    else if (_buttonSouth.WasPressed(ref touchState))
+                    else if (_buttonSouth.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Down) && keyboardState.IsKeyDown(Keys.Down))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadDown) && gamePadState.IsButtonDown(Buttons.DPadDown)))
                     {
                         _map.MovePlayerSouth((curr, next) =>
                         {
@@ -343,7 +357,8 @@ namespace Wumpus
                             PlayFootsteps();
                         });
                     }
-                    else if (_buttonWest.WasPressed(ref touchState))
+                    else if (_buttonWest.WasPressed(ref touchState) || (lastKeyboardState.IsKeyUp(Keys.Left) && keyboardState.IsKeyDown(Keys.Left))
+                        || (lastGamePadState.IsButtonUp(Buttons.DPadLeft) && gamePadState.IsButtonDown(Buttons.DPadLeft)))
                     {
                         _map.MovePlayerWest((curr, next) =>
                         {
@@ -373,6 +388,9 @@ namespace Wumpus
                 if (_scrollPos >= 1.0f)
                     OnEnterRoom();
             }
+
+            lastKeyboardState = keyboardState;
+            lastGamePadState = gamePadState;
         }
 
         private void OnEnteringRoom()

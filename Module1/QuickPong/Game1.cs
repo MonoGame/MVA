@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Input.Touch;
 namespace QuickPong
 {
     /// <summary>
@@ -79,6 +80,13 @@ namespace QuickPong
 
             base.Update(gameTime);
 
+            //Move paddle - to position of 1st touch point in any
+            var touchState = TouchPanel.GetState();
+            if (touchState.Count > 0)
+            {
+                _paddlePosition.X = touchState[0].Position.X - 20;
+            }
+
             //Move ball
             _ballPosition += _ballDirection * (float)(gameTime.ElapsedGameTime.TotalMilliseconds * _speed);
 
@@ -87,13 +95,21 @@ namespace QuickPong
             if (_ballPosition.X < bounds.Left + 10 || _ballPosition.X > bounds.Right - 10)
             {
                 _ballDirection.X = -_ballDirection.X;
-                _speed *= 1.1f;
+                _speed *= 1.02f;
             }
-            if (_ballPosition.Y < bounds.Top + 10 || _ballPosition.Y > bounds.Bottom - 10)
+            if (_ballPosition.Y < bounds.Top + 10 || 
+                (_ballPosition.Y > _paddlePosition.Y && _ballPosition.Y < _paddlePosition.Y + 10 && _ballPosition.X > _paddlePosition.X -20 && _ballPosition.X < _paddlePosition.X +20))
             {
                 _ballDirection.Y = -_ballDirection.Y;
-                _speed *= 1.1f;
+                _speed *= 1.02f;
             }
+
+            //Reset
+            if (_ballPosition.Y > bounds.Bottom)
+            {
+                _ballPosition = graphics.GraphicsDevice.Viewport.Bounds.Center.ToVector2();
+            }
+
 
         }
 
