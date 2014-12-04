@@ -443,7 +443,7 @@ namespace Wumpus
         {
             DrawRoom(state);
 
-            if (_player.IsDead)
+            if (_player.IsDead && _roomTimer > TimeSpan.FromSeconds(2.0f))
                 DrawGameOver(state);
             if (_map.AlienRoom == -1)
                 DrawGameWin(state);
@@ -561,7 +561,10 @@ namespace Wumpus
         private void DrawGameOver(DrawState state)
         {
             state.SpriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, state.ScreenXform);
-            state.SpriteBatch.Draw(_gameLossTex, state.ScreenBounds.Center.ToVector2() - _gameLossTex.GetHalfSize(), Color.Red);
+            state.SpriteBatch.Draw(_gameLossTex, 
+                state.ScreenBounds.Center.ToVector2() - 
+                _gameLossTex.GetHalfSize() +
+                new Vector2(0, 325), Color.Red);
             state.SpriteBatch.End();
         }
 
