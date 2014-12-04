@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input.Touch;
 using Microsoft.Xna.Framework.Media;
+using Microsoft.Xna.Framework.Input;
 
 namespace Wumpus
 {
@@ -40,6 +41,15 @@ namespace Wumpus
 
             if (_startButton.WasPressed(ref touchState))
                 OnStart();
+
+            var kState = Keyboard.GetState();
+            var mState = Mouse.GetState();
+            var pState = GamePad.GetState(PlayerIndex.One);
+            if (kState.IsKeyDown(Keys.Enter) || mState.LeftButton == ButtonState.Pressed || pState.Buttons.Start == ButtonState.Pressed)
+            {
+                OnStart();
+            }
+
         }
 
         public void Draw(GameTime gameTime, DrawState state)

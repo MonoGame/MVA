@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 
 namespace Wumpus
@@ -45,6 +46,12 @@ namespace Wumpus
                     _pressed = true;
                     return true;
                 }                    
+            }
+            var mouseState = Mouse.GetState();
+            if (_location.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
+            {
+                _pressed = true;
+                return true;
             }
 
             _pressed = false;
