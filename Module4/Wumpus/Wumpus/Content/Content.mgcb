@@ -173,12 +173,6 @@
 /processorParam:TextureFormat=Color
 /build:ui/health.png
 
-#begin GameOver.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:GameOver.spritefont
-
 #begin alien/goop.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -409,4 +403,15 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:ui/start.png
+
+#begin ui/title_text.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:ui/title_text.png
 
